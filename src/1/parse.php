@@ -1,20 +1,16 @@
 <?php
 function error(string $msg, int $code)
 {
-    printf(STDERR, "Error: $msg\n");
+    fprintf(STDERR, "Error: $msg\n");
     exit($code);
-}
-
-function tabs(int $tab)
-{
-    for (; $tab > 0; $tab--) {
-        echo "\t";
-    }
 }
 
 function element(int $tab, string $type, string $arg, string $content)
 {
-    tabs($tab);
+    for (; $tab > 0; $tab--) {
+        echo "\t";
+    }
+
     if ($arg == "")
         echo ("<$type>$content</$type>\n");
     else
@@ -23,9 +19,13 @@ function element(int $tab, string $type, string $arg, string $content)
 
 function instruction($order, $words, $types)
 {
-    echo ("\t<instruction order=\"$order\" opcode=\"" . strtoupper($words[0]) . "\">\n");
-    syntax($words, $types);
-    echo ("\t</instruction>\n");
+    if (sizeof($types) == 0) {
+        echo ("\t<instruction order=\"$order\" opcode=\"" . strtoupper($words[0]) . "\" />\n");
+    } else {
+        echo ("\t<instruction order=\"$order\" opcode=\"" . strtoupper($words[0]) . "\">\n");
+        syntax($words, $types);
+        echo ("\t</instruction>\n");
+    }
 }
 
 abstract class Type
@@ -77,7 +77,7 @@ function syntax(array $args, array $types)
                             error("Wrong syntax \"$processed[1]\"", 23);
                         break;
                     case "string":
-                        if (!preg_match('/(([^\x00-\x20\x23\x5C]|\\\d\d\d)*)/', $processed[1]))
+                        if (!preg_match('/(([^\x00-\x20\x23\x5C]|\x5C\d\d\d)*)/', $processed[1]))
                             error("Wrong syntax \"$processed[1]\"", 23);
                         break;
                     case "nil":
@@ -152,7 +152,7 @@ while ($line = fgets($stdin)) {
     error("mising header", 21);
 }
 
-if(!$header){
+if (!$header) {
     error("mising header", 21);
 }
 
@@ -227,7 +227,7 @@ while ($line = fgets($stdin)) {
             instruction($order, $words, array(Type::Label, Type::Symb, Type::Symb));
             break;
         default:
-            error("Unknown instruction \"$words[0]\"", 22);
+            error("Unknown instruction \"$words[0]\"", 23);
             break;
     }
     $order++;
