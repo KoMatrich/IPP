@@ -1,7 +1,7 @@
 <?php
 function error(string $msg, int $code)
 {
-    fprintf(STDERR, "Error: $msg\n");
+    //fprintf(STDERR, "[$code]Error: $msg\n");
     exit($code);
 }
 
@@ -19,11 +19,14 @@ function element(int $tab, string $type, string $arg, string $content)
 
 function instruction($order, $words, $types)
 {
+    if (sizeof($words) - 1 != sizeof($types))
+        error("Required arguments not matching actual", 23);
+
     if (sizeof($types) == 0) {
         echo ("\t<instruction order=\"$order\" opcode=\"" . strtoupper($words[0]) . "\" />\n");
     } else {
         echo ("\t<instruction order=\"$order\" opcode=\"" . strtoupper($words[0]) . "\">\n");
-        syntax($words, $types);
+        args($words, $types);
         echo ("\t</instruction>\n");
     }
 }
@@ -43,10 +46,8 @@ function argument(int $index, string $type, string $content)
     element(2, "arg$index", "type=\"$type\"", $content);
 }
 
-function syntax(array $args, array $types)
+function args(array $args, array $types)
 {
-    if (sizeof($args) - 1 != sizeof($types))
-        error("Required arguments not matching actual", 23);
     for ($i = 1; $i < sizeof($args); $i++) {
         $processed = explode('@', $args[$i], 2);
         $type = $types[$i - 1];
@@ -54,14 +55,14 @@ function syntax(array $args, array $types)
         //Check if symb is var
         //  change type to var
         if ($type == Type::Symb)
-            if (preg_match("/\b(GF|LF|TF)\b/", $processed[0]))
+            if (preg_match("/^(GF|LF|TF)$/", $processed[0]))
                 $type = Type::Var;
 
         switch ($type) {
             case Type::Label:
-                if (!preg_match('/\b[_A-z]+[A-z0-9\_\-\$\&\%\*\!\?]*\b/', $args[$i]))
-                    error("Wrong syntax \"$args[$i]\"", 23);
-                argument($i, "label", $args[$i]);
+                if (!preg_match('/^([\_\-\$\&\%\*\!\?]|[A-z0-9])+$/', $processed[0])) //TODO
+                    error("Wrong syntax \"$processed[0]\"", 23);
+                argument($i, "label", $processed[0]);
                 break;
 
             case Type::Symb:
@@ -69,7 +70,7 @@ function syntax(array $args, array $types)
                     error("Wrong syntax \"$args[$i]\"", 23);
                 switch ($processed[0]) {
                     case "int":
-                        if (!preg_match('/^(\+|\-)?([0-9]*(_[0-9]+)*|0+[xX][0-9a-fA-F]+(_[0-9a-fA-F]+)*|0+[oO]?[0-7]+(_[0-7]+)*)$/', $processed[1]))
+                        if (!preg_match('/^(\+|\-)?([0-9]+(_[0-9]+)*|0+[xX][0-9a-fA-F]+(_[0-9a-fA-F]+)*|0+[oO]?[0-7]+(_[0-7]+)*)$/', $processed[1]))
                             error("Wrong syntax \"$processed[1]\"", 23);
                         break;
                     case "bool":
@@ -77,7 +78,7 @@ function syntax(array $args, array $types)
                             error("Wrong syntax \"$processed[1]\"", 23);
                         break;
                     case "string":
-                        if (!preg_match('/(([^\x00-\x20\x23\x5C]|\x5C\d\d\d)*)/', $processed[1]))
+                        if (!preg_match('/^(([^\x00-\x20\x23\x5C]|\\\d\d\d|[A-z0-9])*)$/', $processed[1]))
                             error("Wrong syntax \"$processed[1]\"", 23);
                         break;
                     case "nil":
@@ -97,16 +98,16 @@ function syntax(array $args, array $types)
                 if (!preg_match("/^(GF|LF|TF)$/", $processed[0]))
                     error("Wrong syntax \"$processed[0]\"", 23);
 
-                if (!preg_match("/^[_A-z]+([\_\-\$\&\%\*\!\?A-z0-9])*$/", $processed[1]))
+                if (!preg_match("/^[\_\-\$\&\%\*\!\?A-z0-9]*$/", $processed[1]))
                     error("Wrong syntax \"$processed[1]\"", 23);
 
                 argument($i, "var", ($args[$i]));
                 break;
 
             case Type::Type:
-                if (!preg_match("/^(int|bool|string)$/", $processed[0]))
-                    error("Wrong syntax \"$processed[0]\"", 23);
-                argument($i, "type", ($processed[0]));
+                if (!preg_match("/^(int|bool|string)$/", $args[$i]))
+                    error("Wrong syntax \"$args[$i]\"", 23);
+                argument($i, "type", ($args[$i]));
                 break;
         }
     }
@@ -115,8 +116,8 @@ function syntax(array $args, array $types)
 ini_set('display_errors', 'stderr');
 error_reporting(E_ALL);
 
-$stdin = fopen("php://stdin", 'r');
-//$stdin = fopen("input.txt", 'r');
+//$stdin = fopen("php://stdin", 'r');
+$stdin = fopen("input.txt", 'r');
 
 if ($argc > 1) {
     if ($argv[1] == "--help") {
@@ -133,8 +134,8 @@ if ($argc > 2)
 $header = false;
 $header_name = ".IPPcode22";
 while ($line = fgets($stdin)) {
-    $code_line = explode('#', trim($line));               //removes comments
-    $words = explode(' ', trim($code_line[0]));     //splits by words
+    $code_line = explode('#', trim($line), 2);               //removes comments
+    $words = preg_split('/\s+/', trim($code_line[0]));    //splits by words
 
     if ($words[0] == "" && sizeof($words) == 1) {
         //empty line or line with only comment
@@ -164,8 +165,8 @@ echo ("<program language=\"$header_name\">\n");
 $order = 1;
 
 while ($line = fgets($stdin)) {
-    $code_line = explode('#', trim($line));
-    $words = explode(' ', trim($code_line[0]));
+    $code_line = explode('#', trim($line), 2);
+    $words = preg_split('/\s+/', trim($code_line[0]));
 
     if ($words[0] == "" && sizeof($words) == 1) {
         //empty line or line with only comment
@@ -221,13 +222,15 @@ while ($line = fgets($stdin)) {
         case "STRI2INT": // var symb symb
         case "CONCAT": // var symb symb
         case "GETCHAR": // var symb symb
+        case "SETCHAR": // var symb symb
             instruction($order, $words, array(Type::Var, Type::Symb, Type::Symb));
             break;
         case "JUMPIFEQ": // lable symb symb
+        case "JUMPIFNEQ": // lable symb symb
             instruction($order, $words, array(Type::Label, Type::Symb, Type::Symb));
             break;
         default:
-            error("Unknown instruction \"$words[0]\"", 23);
+            error("Unknown instruction \"$words[0]\"", 22);
             break;
     }
     $order++;
