@@ -1,12 +1,6 @@
-.IPPcode22
-DEFVAR GF@counter
-MOVE GF@counter string@ #Inicializace proměnné na prázdný řetězec
-#Jednoduchá iterace, dokud nebude splněna zadaná podmínka
-LABEL while
-JUMPIFEQ end GF@counter string@aaa
-WRITE string@Proměnná\032GF@counter\032obsahuje\032
-WRITE GF@counter
-WRITE string@\010
-CONCAT GF@counter GF@counter string@a
-JUMP while
-LABEL end
+.IPPcode22  # nacteni vstupu a vypis
+DEFVAR GF@a
+READ GF@a int
+WRITE GF@a
+WRITE string@\032<not-tag/>\032 # řetězec převádíme, aby byl správně uložen do XML elementu
+WRITE bool@true#zapisujeme malými písmeny

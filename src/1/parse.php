@@ -1,146 +1,237 @@
 <?php
-ini_set('display_errors', 'stderr');
-error_reporting(E_ALL);
-
-function error($msg)
+function error(string $msg, int $code)
 {
-    echo ("Error: $msg\n");
-    exit(1);
+    printf(STDERR, "Error: $msg\n");
+    exit($code);
 }
 
-function tabs($tab)
+function tabs(int $tab)
 {
     for (; $tab > 0; $tab--) {
         echo "\t";
     }
 }
 
-function element_open($tab, $type, $arg)
+function element(int $tab, string $type, string $arg, string $content)
 {
     tabs($tab);
-    echo ("<$type $arg>\n");
+    if ($arg == "")
+        echo ("<$type>$content</$type>\n");
+    else
+        echo ("<$type $arg>$content</$type>\n");
 }
 
-function element_close($tab, $type)
+function instruction($order, $words, $types)
 {
-    tabs($tab);
-    echo ("</$type>\n");
+    echo ("\t<instruction order=\"$order\" opcode=\"" . strtoupper($words[0]) . "\">\n");
+    syntax($words, $types);
+    echo ("\t</instruction>\n");
 }
+
+abstract class Type
+{
+    const Label = 0;
+    const Symb = 1;
+    const Var = 2;
+    const Type = 3;
+}
+
+function argument(int $index, string $type, string $content)
+{
+    $type = htmlspecialchars($type, ENT_XML1 | ENT_QUOTES);
+    $content = htmlspecialchars($content, ENT_XML1 | ENT_QUOTES);
+    element(2, "arg$index", "type=\"$type\"", $content);
+}
+
+function syntax(array $args, array $types)
+{
+    if (sizeof($args) - 1 != sizeof($types))
+        error("Required arguments not matching actual", 23);
+    for ($i = 1; $i < sizeof($args); $i++) {
+        $processed = explode('@', $args[$i], 2);
+        $type = $types[$i - 1];
+
+        //Check if symb is var
+        //  change type to var
+        if ($type == Type::Symb)
+            if (preg_match("/\b(GF|LF|TF)\b/", $processed[0]))
+                $type = Type::Var;
+
+        switch ($type) {
+            case Type::Label:
+                if (!preg_match('/\b[_A-z]+[A-z0-9\_\-\$\&\%\*\!\?]*\b/', $args[$i]))
+                    error("Wrong syntax \"$args[$i]\"", 23);
+                argument($i, "label", $args[$i]);
+                break;
+
+            case Type::Symb:
+                if (sizeof($processed) != 2)
+                    error("Wrong syntax \"$args[$i]\"", 23);
+                switch ($processed[0]) {
+                    case "int":
+                        if (!preg_match('/^(\+|\-)?([0-9]*(_[0-9]+)*|0+[xX][0-9a-fA-F]+(_[0-9a-fA-F]+)*|0+[oO]?[0-7]+(_[0-7]+)*)$/', $processed[1]))
+                            error("Wrong syntax \"$processed[1]\"", 23);
+                        break;
+                    case "bool":
+                        if (!preg_match('/^(true|false)$/', $processed[1]))
+                            error("Wrong syntax \"$processed[1]\"", 23);
+                        break;
+                    case "string":
+                        if (!preg_match('/(([^\x00-\x20\x23\x5C]|\\\d\d\d)*)/', $processed[1]))
+                            error("Wrong syntax \"$processed[1]\"", 23);
+                        break;
+                    case "nil":
+                        if (!preg_match('/^(nil)$/', $processed[1]))
+                            error("Wrong syntax \"$processed[1]\"", 23);
+                        break;
+                    default:
+                        error("Wrong syntax \"$processed[0]\"", 23);
+                }
+                argument($i, "$processed[0]", $processed[1]);
+                break;
+
+            case Type::Var:
+                if (sizeof($processed) != 2)
+                    error("Wrong syntax \"$args[$i]\"", 23);
+
+                if (!preg_match("/^(GF|LF|TF)$/", $processed[0]))
+                    error("Wrong syntax \"$processed[0]\"", 23);
+
+                if (!preg_match("/^[_A-z]+([\_\-\$\&\%\*\!\?A-z0-9])*$/", $processed[1]))
+                    error("Wrong syntax \"$processed[1]\"", 23);
+
+                argument($i, "var", ($args[$i]));
+                break;
+
+            case Type::Type:
+                if (!preg_match("/^(int|bool|string)$/", $processed[0]))
+                    error("Wrong syntax \"$processed[0]\"", 23);
+                argument($i, "type", ($processed[0]));
+                break;
+        }
+    }
+}
+
+ini_set('display_errors', 'stderr');
+error_reporting(E_ALL);
+
+$stdin = fopen("php://stdin", 'r');
+//$stdin = fopen("input.txt", 'r');
 
 if ($argc > 1) {
     if ($argv[1] == "--help") {
         echo ("Usage: lorem ipsum\n");
         exit(0);
     } else {
-        error("unknown argument \"$argv[1]\"");
+        error("unknown argument \"$argv[1]\"", 10);
     }
 }
 
 if ($argc > 2)
-    error("supports only one argument");
+    error("supports only one argument", 10);
 
 $header = false;
 $header_name = ".IPPcode22";
-while ($line = fgets(STDIN))
-    if (!$header)
-        if ($line ==  $header_name) {
-            $header = true;
-            break;
-        }
+while ($line = fgets($stdin)) {
+    $code_line = explode('#', trim($line));               //removes comments
+    $words = explode(' ', trim($code_line[0]));     //splits by words
 
-if (!$header) {
-    error("mising header");
+    if ($words[0] == "" && sizeof($words) == 1) {
+        //empty line or line with only comment
+        continue;
+    }
+
+    if (sizeof($words) != 1)
+        error("mising header", 21);
+
+    if (strtoupper($words[0]) ==  strtoupper($header_name)) {
+        $header = true;
+        break;
+    }
+
+    error("mising header", 21);
 }
 
-echo ("<?xml version=\"1.0\" encoding=\"UTF-8\"\n");
-echo ("<program>\n");
-echo ($header_name);
+if(!$header){
+    error("mising header", 21);
+}
+
+//removes dot infront of header_name
+$header_name = ltrim($header_name, '.');
+
+echo ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+echo ("<program language=\"$header_name\">\n");
 $order = 1;
-while ($line = fgets(STDIN)) {
-    $code_line = explode('#', $line);                //removes comments
-    $words = explode(' ', trim($code_line[0]));     //removes whitespaces and splits to words
+
+while ($line = fgets($stdin)) {
+    $code_line = explode('#', trim($line));
+    $words = explode(' ', trim($code_line[0]));
+
+    if ($words[0] == "" && sizeof($words) == 1) {
+        //empty line or line with only comment
+        continue;
+    }
 
     switch (strtoupper($words[0])) {
         case "CREATEFRAME": //
-            break;
         case "PUSHFRAME": //
-            break;
         case "POPFRAME": //
-            break;
         case "BREAK": //
-            break;
         case "RETURN": //
+            instruction($order, $words, array());
             break;
 
         case "CALL": // lable
-            break;
-        case "LABLE": // lable
-            break;
+        case "LABEL": // lable
         case "JUMP": // lable
+            instruction($order, $words, array(Type::Label));
             break;
         case "DEFVAR": // var
-            element_open(1, "instruction" . strtoupper($words[1]), "order=\"$order\",opcode=\"UPERCASE\"");
-            if (preg_match("[0-9]", $words[1]))
-                echo ("\t\t<arg1 type=\"var\">$words[1]</arg1>");
-            element_close(1, "instruction" . strtoupper($words[1]));
-            break;
         case "POPS": // var
+            instruction($order, $words, array(Type::Var));
             break;
         case "PUSHS": // symb
-            break;
         case "EXIT": // symb
-            break;
         case "DPRINT": // symb
-            break;
         case "WRITE": // symb
+            instruction($order, $words, array(Type::Symb));
             break;
 
         case "MOVE": // var symb
-            break;
         case "INT2CHAR": // var symb
-            break;
         case "STRLEN": // var symb
-            break;
         case "TYPE": // var symb
+        case "NOT": // var symb
+            instruction($order, $words, array(Type::Var, Type::Symb));
             break;
+
         case "READ": // var type
+            instruction($order, $words, array(Type::Var, Type::Type));
             break;
 
         case "ADD": // var symb symb
-            break;
         case "SUB": // var symb symb
-            break;
         case "MUL": // var symb symb
-            break;
         case "IDIV": // var symb symb
-            break;
         case "LT": // var symb symb
-            break;
         case "GT": // var symb symb
-            break;
         case "EQ": // var symb symb
-            break;
         case "AND": // var symb symb
-            break;
         case "OR": // var symb symb
-            break;
-        case "NOT": // var symb symb
-            break;
         case "STRI2INT": // var symb symb
-            break;
         case "CONCAT": // var symb symb
-            break;
         case "GETCHAR": // var symb symb
+            instruction($order, $words, array(Type::Var, Type::Symb, Type::Symb));
             break;
-        case "JUMPIFNEQ": // lable symb symb
+        case "JUMPIFEQ": // lable symb symb
+            instruction($order, $words, array(Type::Label, Type::Symb, Type::Symb));
             break;
         default:
-            error("Unknown instruction \"$words[1]\"");
+            error("Unknown instruction \"$words[0]\"", 22);
             break;
     }
     $order++;
 }
 
-echo ("<\program>\n");
-echo ("?>\n");
+echo ("</program>\n");
 exit(0);
