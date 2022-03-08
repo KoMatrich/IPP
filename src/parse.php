@@ -1,7 +1,22 @@
 <?php
-function error(string $msg, int $code)
+function error(int $code, string $target)
 {
-    //fprintf(STDERR, "[$code]Error: $msg\n");
+    $msg = "";
+    switch ($code) {
+        case 10:
+            $msg = "Starting arguments";
+            break;
+        case 21:
+            $msg = "Mising header ";
+            break;
+        case 22:
+            $msg = "Op-code at ";
+            break;
+        case 23:
+            $msg = "Syntax or lexical error at ";
+            break;
+    }
+    fprintf(STDERR, "[$code]Error: $msg $target\n");
     exit($code);
 }
 
@@ -20,7 +35,7 @@ function element(int $tab, string $type, string $arg, string $content)
 function instruction($order, $words, $types)
 {
     if (sizeof($words) - 1 != sizeof($types))
-        error("Required arguments not matching actual", 23);
+        error(23, "$words");
 
     if (sizeof($types) == 0) {
         echo ("\t<instruction order=\"$order\" opcode=\"" . strtoupper($words[0]) . "\" />\n");
@@ -61,52 +76,52 @@ function args(array $args, array $types)
         switch ($type) {
             case Type::Label:
                 if (!preg_match('/^([\_\-\$\&\%\*\!\?]|[A-z0-9])+$/', $processed[0])) //TODO
-                    error("Wrong syntax \"$processed[0]\"", 23);
+                    error(23, "\"$processed[0]\"");
                 argument($i, "label", $processed[0]);
                 break;
 
             case Type::Symb:
                 if (sizeof($processed) != 2)
-                    error("Wrong syntax \"$args[$i]\"", 23);
+                    error(23, "\"$args[$i]\"");
                 switch ($processed[0]) {
                     case "int":
                         if (!preg_match('/^(\+|\-)?([0-9]+(_[0-9]+)*|0+[xX][0-9a-fA-F]+(_[0-9a-fA-F]+)*|0+[oO]?[0-7]+(_[0-7]+)*)$/', $processed[1]))
-                            error("Wrong syntax \"$processed[1]\"", 23);
+                            error(23, "\"$processed[1]\"");
                         break;
                     case "bool":
                         if (!preg_match('/^(true|false)$/', $processed[1]))
-                            error("Wrong syntax \"$processed[1]\"", 23);
+                            error(23, "\"$processed[1]\"");
                         break;
                     case "string":
                         if (!preg_match('/^(([^\x00-\x20\x23\x5C]|\\\d\d\d|[A-z0-9])*)$/', $processed[1]))
-                            error("Wrong syntax \"$processed[1]\"", 23);
+                            error(23, "\"$processed[1]\"");
                         break;
                     case "nil":
                         if (!preg_match('/^(nil)$/', $processed[1]))
-                            error("Wrong syntax \"$processed[1]\"", 23);
+                            error(23, "\"$processed[1]\"");
                         break;
                     default:
-                        error("Wrong syntax \"$processed[0]\"", 23);
+                        error(23, "\"$processed[0]\"");
                 }
                 argument($i, "$processed[0]", $processed[1]);
                 break;
 
             case Type::Var:
                 if (sizeof($processed) != 2)
-                    error("Wrong syntax \"$args[$i]\"", 23);
+                    error(23,"\"$args[$i]\"");
 
                 if (!preg_match("/^(GF|LF|TF)$/", $processed[0]))
-                    error("Wrong syntax \"$processed[0]\"", 23);
+                    error(23,"\"$processed[0]\"");
 
                 if (!preg_match("/^[\_\-\$\&\%\*\!\?A-z0-9]*$/", $processed[1]))
-                    error("Wrong syntax \"$processed[1]\"", 23);
+                    error(23,"\"$processed[1]\"");
 
                 argument($i, "var", ($args[$i]));
                 break;
 
             case Type::Type:
                 if (!preg_match("/^(int|bool|string)$/", $args[$i]))
-                    error("Wrong syntax \"$args[$i]\"", 23);
+                    error(23,"\"$args[$i]\"");
                 argument($i, "type", ($args[$i]));
                 break;
         }
@@ -124,12 +139,12 @@ if ($argc > 1) {
         echo ("Usage: lorem ipsum\n");
         exit(0);
     } else {
-        error("unknown argument \"$argv[1]\"", 10);
+        error(10,"unknown \"$argv[1]\"");
     }
 }
 
 if ($argc > 2)
-    error("supports only one argument", 10);
+    error(10,"supports only one");
 
 $header = false;
 $header_name = ".IPPcode22";
@@ -143,18 +158,18 @@ while ($line = fgets($stdin)) {
     }
 
     if (sizeof($words) != 1)
-        error("mising header", 21);
+        error(21,"");
 
     if (strtoupper($words[0]) ==  strtoupper($header_name)) {
         $header = true;
         break;
     }
 
-    error("mising header", 21);
+    error(21,"");
 }
 
 if (!$header) {
-    error("mising header", 21);
+    error(21,"");
 }
 
 //removes dot infront of header_name
@@ -230,7 +245,7 @@ while ($line = fgets($stdin)) {
             instruction($order, $words, array(Type::Label, Type::Symb, Type::Symb));
             break;
         default:
-            error("Unknown instruction \"$words[0]\"", 22);
+            error(22,"Unknown instruction \"$words[0]\"");
             break;
     }
     $order++;
