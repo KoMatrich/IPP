@@ -7,16 +7,16 @@ function error(int $code, string $target)
             $msg = "Starting arguments";
             break;
         case 21:
-            $msg = "Mising header ";
+            $msg = "Mising header";
             break;
         case 22:
-            $msg = "Op-code at ";
+            $msg = "Op-code";
             break;
         case 23:
-            $msg = "Syntax or lexical error at ";
+            $msg = "Syntax or lexical";
             break;
     }
-    fprintf(STDERR, "[$code]Error: $msg $target\n");
+    //fprintf(STDERR, "[$code]Error: $msg $target\n");
     exit($code);
 }
 
@@ -32,10 +32,10 @@ function element(int $tab, string $type, string $arg, string $content)
         echo ("<$type $arg>$content</$type>\n");
 }
 
-function instruction($order, $words, $types)
+function instruction(int $order,array $words,array $types)
 {
     if (sizeof($words) - 1 != sizeof($types))
-        error(23, "$words");
+        error(23, "wrong argument count");
 
     if (sizeof($types) == 0) {
         echo ("\t<instruction order=\"$order\" opcode=\"" . strtoupper($words[0]) . "\" />\n");
@@ -63,64 +63,82 @@ function argument(int $index, string $type, string $content)
 
 function args(array $args, array $types)
 {
+    $reg_frame = '/^(GF|LF|TF)$/';
+    $reg_name = '/^[\_\-\$\&\%\*\!\?\da-zA-Z]+$/';
+    $reg_int = '/^(\+|\-)?(\d+(_\d+)*|0+[xX][\da-fA-F]+(_[\da-fA-F]+)*|0+[oO]?[0-7]+(_[0-7]+)*)$/';
+    $reg_string = '/^([^\x00-\x20\x23\x5C]|\\\d\d\d)*$/';
+    $reg_types = '/^(int|bool|string)$/';
+
     for ($i = 1; $i < sizeof($args); $i++) {
-        $processed = explode('@', $args[$i], 2);
+        //args contains cmd name soo we start from 1
+        //but types are indexed from 0-n
         $type = $types[$i - 1];
 
-        //Check if symb is var
-        //  change type to var
-        if ($type == Type::Symb)
-            if (preg_match("/^(GF|LF|TF)$/", $processed[0]))
+        //used to check var and symb
+        $splited = explode('@', $args[$i], 2);
+
+        //Check if type is symb
+        if ($type == Type::Symb){
+            //if symb has format as [frame-foramt]@[rest] then it is 
+            if (preg_match($reg_frame, $splited[0]))
                 $type = Type::Var;
+        }
+                
 
         switch ($type) {
             case Type::Label:
-                if (!preg_match('/^([\_\-\$\&\%\*\!\?]|[A-z0-9])+$/', $processed[0])) //TODO
-                    error(23, "\"$processed[0]\"");
-                argument($i, "label", $processed[0]);
+                //whole argument is formated as reg_name
+                if (!preg_match($reg_name, $args[$i]))
+                    error(23, "\"$args[$i]\"");
+                argument($i, "label", $args[$i]);
                 break;
 
             case Type::Symb:
-                if (sizeof($processed) != 2)
+                //symbol has to be splited to 2 parts
+                if (sizeof($splited) != 2)
                     error(23, "\"$args[$i]\"");
-                switch ($processed[0]) {
+                
+                //first part defines type of symb
+                switch ($splited[0]) {
                     case "int":
-                        if (!preg_match('/^(\+|\-)?([0-9]+(_[0-9]+)*|0+[xX][0-9a-fA-F]+(_[0-9a-fA-F]+)*|0+[oO]?[0-7]+(_[0-7]+)*)$/', $processed[1]))
-                            error(23, "\"$processed[1]\"");
+                        //second part defines value of symb
+                        if (!preg_match($reg_int, $splited[1]))
+                            error(23, "\"$splited[1]\"");
                         break;
                     case "bool":
-                        if (!preg_match('/^(true|false)$/', $processed[1]))
-                            error(23, "\"$processed[1]\"");
+                        if (!preg_match('/^(true|false)$/', $splited[1]))
+                            error(23, "\"$splited[1]\"");
                         break;
                     case "string":
-                        if (!preg_match('/^(([^\x00-\x20\x23\x5C]|\\\d\d\d|[A-z0-9])*)$/', $processed[1]))
-                            error(23, "\"$processed[1]\"");
+                        if (!preg_match($reg_string, $splited[1]))
+                            error(23, "\"$splited[1]\"");
                         break;
                     case "nil":
-                        if (!preg_match('/^(nil)$/', $processed[1]))
-                            error(23, "\"$processed[1]\"");
+                        if (!preg_match('/^(nil)$/', $splited[1]))
+                            error(23, "\"$splited[1]\"");
                         break;
                     default:
-                        error(23, "\"$processed[0]\"");
+                        error(23, "\"$splited[0]\"");
                 }
-                argument($i, "$processed[0]", $processed[1]);
+                argument($i, "$splited[0]", $splited[1]);
                 break;
 
             case Type::Var:
-                if (sizeof($processed) != 2)
+                //var has to be splited to 2 parts
+                if (sizeof($splited) != 2)
                     error(23,"\"$args[$i]\"");
 
-                if (!preg_match("/^(GF|LF|TF)$/", $processed[0]))
-                    error(23,"\"$processed[0]\"");
+                if (!preg_match($reg_frame, $splited[0]))
+                    error(23,"\"$splited[0]\"");
 
-                if (!preg_match("/^[\_\-\$\&\%\*\!\?A-z0-9]*$/", $processed[1]))
-                    error(23,"\"$processed[1]\"");
+                if (!preg_match($reg_name, $splited[1]))
+                    error(23,"\"$splited[1]\"");
 
                 argument($i, "var", ($args[$i]));
                 break;
 
             case Type::Type:
-                if (!preg_match("/^(int|bool|string)$/", $args[$i]))
+                if (!preg_match($reg_types, $args[$i]))
                     error(23,"\"$args[$i]\"");
                 argument($i, "type", ($args[$i]));
                 break;
@@ -131,12 +149,12 @@ function args(array $args, array $types)
 ini_set('display_errors', 'stderr');
 error_reporting(E_ALL);
 
-//$stdin = fopen("php://stdin", 'r');
-$stdin = fopen("input.txt", 'r');
+$stdin = fopen("php://stdin", 'r');
+//$stdin = fopen("input.txt", 'r');
 
 if ($argc > 1) {
     if ($argv[1] == "--help") {
-        echo ("Usage: lorem ipsum\n");
+        echo ("Used as parser\n");
         exit(0);
     } else {
         error(10,"unknown \"$argv[1]\"");
