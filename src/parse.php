@@ -64,9 +64,9 @@ function argument(int $index, string $type, string $content)
 function args(array $args, array $types)
 {
     $reg_frame = '/^(GF|LF|TF)$/';
-    $reg_name = '/^[\_\-\$\&\%\*\!\?\da-zA-Z]+$/';
+    $reg_name = '/^[\_\-\$\&\%\*\!\?a-zA-Z][\_\-\$\&\%\*\!\?\da-zA-Z]*$/';
     $reg_int = '/^(\+|\-)?(\d+(_\d+)*|0+[xX][\da-fA-F]+(_[\da-fA-F]+)*|0+[oO]?[0-7]+(_[0-7]+)*)$/';
-    $reg_string = '/^([^\x00-\x20\x23\x5C]|\\\d\d\d)*$/';
+    $reg_string = '/^([^\x00-\x20\x23\x5C]|\x5C\d\d\d)*$/';
     $reg_types = '/^(int|bool|string)$/';
 
     for ($i = 1; $i < sizeof($args); $i++) {
