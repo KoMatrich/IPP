@@ -4,7 +4,7 @@ function error(int $code, string $target)
     $msg = "";
     switch ($code) {
         case 10:
-            $msg = "Starting arguments";
+            $msg = "Starting argument/s";
             break;
         case 21:
             $msg = "Mising header";
@@ -16,7 +16,7 @@ function error(int $code, string $target)
             $msg = "Syntax or lexical";
             break;
     }
-    //fprintf(STDERR, "[$code]Error: $msg $target\n");
+    fprintf(STDERR, "[$code]Error: $msg $target\n");
     exit($code);
 }
 
@@ -32,19 +32,6 @@ function element(int $tab, string $type, string $arg, string $content)
         echo ("<$type $arg>$content</$type>\n");
 }
 
-function instruction(int $order,array $words,array $types)
-{
-    if (sizeof($words) - 1 != sizeof($types))
-        error(23, "wrong argument count");
-
-    if (sizeof($types) == 0) {
-        echo ("\t<instruction order=\"$order\" opcode=\"" . strtoupper($words[0]) . "\" />\n");
-    } else {
-        echo ("\t<instruction order=\"$order\" opcode=\"" . strtoupper($words[0]) . "\">\n");
-        args($words, $types);
-        echo ("\t</instruction>\n");
-    }
-}
 
 abstract class Type
 {
@@ -146,10 +133,27 @@ function args(array $args, array $types)
     }
 }
 
+function instruction(int $order,array $words,array $types)
+{
+    if (sizeof($words) - 1 != sizeof($types))
+        error(23, "wrong argument count");
+
+    if (sizeof($types) == 0) {
+        echo ("\t<instruction order=\"$order\" opcode=\"" . strtoupper($words[0]) . "\" />\n");
+    } else {
+        echo ("\t<instruction order=\"$order\" opcode=\"" . strtoupper($words[0]) . "\">\n");
+        args($words, $types);
+        echo ("\t</instruction>\n");
+    }
+}
+
+//begining of main program
+
 ini_set('display_errors', 'stderr');
 error_reporting(E_ALL);
 
 $stdin = fopen("php://stdin", 'r');
+//for testing
 //$stdin = fopen("input.txt", 'r');
 
 if ($argc > 1) {
