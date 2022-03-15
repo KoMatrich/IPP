@@ -50,6 +50,7 @@ function argument(int $index, string $type, string $content)
 
 function args(array $args, array $types)
 {
+    //regex formats
     $reg_frame = '/^(GF|LF|TF)$/';
     $reg_name = '/^[\_\-\$\&\%\*\!\?a-zA-Z][\_\-\$\&\%\*\!\?\da-zA-Z]*$/';
     $reg_int = '/^(\+|\-)?(\d+(_\d+)*|0+[xX][\da-fA-F]+(_[\da-fA-F]+)*|0+[oO]?[0-7]+(_[0-7]+)*)$/';
@@ -133,7 +134,7 @@ function args(array $args, array $types)
     }
 }
 
-function instruction(int $order,array $words,array $types)
+function instruction(int $order, array $words, array $types)
 {
     if (sizeof($words) - 1 != sizeof($types))
         error(23, "wrong argument count");
@@ -147,7 +148,9 @@ function instruction(int $order,array $words,array $types)
     }
 }
 
+
 //begining of main program
+
 
 ini_set('display_errors', 'stderr');
 error_reporting(E_ALL);
@@ -172,10 +175,11 @@ $header = false;
 $header_name = ".IPPcode22";
 while ($line = fgets($stdin)) {
     $code_line = explode('#', trim($line), 2);               //removes comments
-    $words = preg_split('/\s+/', trim($code_line[0]));    //splits by words
+    $words = preg_split('/\s+/', trim($code_line[0]));       //splits by words
 
     if ($words[0] == "" && sizeof($words) == 1) {
         //empty line or line with only comment
+        //nothing to analyze
         continue;
     }
 
@@ -201,6 +205,7 @@ echo ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 echo ("<program language=\"$header_name\">\n");
 $order = 1;
 
+//main loop
 while ($line = fgets($stdin)) {
     $code_line = explode('#', trim($line), 2);
     $words = preg_split('/\s+/', trim($code_line[0]));
@@ -210,6 +215,7 @@ while ($line = fgets($stdin)) {
         continue;
     }
 
+    //main FSM
     switch (strtoupper($words[0])) {
         case "CREATEFRAME": //
         case "PUSHFRAME": //
