@@ -150,8 +150,6 @@ function instruction(int $order, array $words, array $types)
 
 
 //begining of main program
-
-
 ini_set('display_errors', 'stderr');
 error_reporting(E_ALL);
 
