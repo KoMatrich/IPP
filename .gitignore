@@ -2,4 +2,8 @@ src/Testy
 *.in
 *.out
 *.src
+*.p_run_rc
+*.i_run_rc
+*.p_run_out
+*.i_run_out
 xkocic02.zip
