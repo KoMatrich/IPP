@@ -2,7 +2,12 @@
     "configurations": [
     {
         "name": "Launch currently open script",
-        "args": ["-d","./Testy/parse-only","-r"],        
+        "args": [
+            "-d",
+            "./Testy/parse-only",
+            "-r",
+            "-po"
+        ],
         "type": "php",
         "request": "launch",
         "program": "${file}",

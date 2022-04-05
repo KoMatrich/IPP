@@ -182,14 +182,30 @@ function open($dir, $recursive)
     return $files;
 }
 
+if (!$int_only)
+    if (file_exists($parser) == false)
+        error(41, $parser);
+
+if (!$parser_only)
+    if (file_exists($interpreter) == false)
+        error(41, $interpreter);
+
 $files = open($dir, $recursive);
-$index = 0;
-$done_ok = 0;
 $count = count($files);
 
-foreach ($files as $test) {
-    $index++;
+function print_progress($name, $index, $count, $done_ok)
+{
+    if ($done_ok != null) {
+        $correct_percent = $done_ok * 100 / $index;
+        printf("[%s]: %8d/%8d ,correct %.1f\n", $name, $index, $count, $correct_percent);
+    } else {
+        printf("[%s]: %8d/%8d\n", $name, $index, $count);
+    }
+}
 
+//get content of test files to variables
+function open_test($test, &$in, &$out, &$rc, &$src)
+{
     if (file_exists($test . ".in") == false) {
         $in = fopen($test . ".in", "w") or error(44, $test . ".in");
         fclose($in);
@@ -216,70 +232,108 @@ foreach ($files as $test) {
         error(44, $test . ".rc");
 
     if (file_exists($test . ".src") == false) {
-        continue;
+        error(44, $test . ".src");
     }
+
     $src = file_get_contents($test . ".src");
     if ($src === false) {
-        continue;
-    }
-
-    $p_rc=".p_run_rc";
-    $p_out=".p_run_out";
-
-    $i_rc=".i_run_rc";
-    $i_out=".i_run_out";
-
-    if (!$int_only) { //parser tests
-        exec("cat \"$test.src\" | php $parser $in 2>&1", $run_out, $run_rc);
-        $rc_file = fopen($test.$p_rc, "w") or error(44, $test.$p_rc);
-        fwrite($rc_file, $run_rc);
-        fclose($rc_file);
-
-        $out_file = fopen($test.$p_out, "w") or error(44, $test.$p_out);
-        fwrite($out_file, implode("\n", $run_out));
-        fclose($out_file);
-        
-        if($rc != $run_rc){
-            Printf("Parser tests: %-45s %s %d != %d\n",$test,"Test retuned wrong return code",$run_rc,$rc);
-            continue;
-        }
-
-        exec("diff -w -B -q $test$p_out $test$p_out", $_ ,$return_code);
-        if($return_code != 0){
-            Printf("Parser tests: %-45s output file differ from presset\n",$test);
-            continue;
-        }
-
-        $done_ok++;
-        if ($index % 20 == 0)
-            printf("Parser tests: %d/%d done, with %.1f%% correct\n", $index, $count, $done_ok / $index * 100);
-    }
-
-    if (!$parser_only) { //interpreter tests
-        exec("cat \"$test$p_out\" | python $interpreter 2>$1", $run_out, $run_rc);
-        $rc_file = fopen($test.$i_rc, "w") or error(44, $test.$i_rc);
-        fwrite($rc_file, $run_rc);
-        fclose($rc_file);
-
-        $out_file = fopen($test.$i_out, "w") or error(44, $test.$i_out);
-        fwrite($out_file, implode("\n", $run_out));
-        fclose($out_file);
-        
-        if($rc != $run_rc){
-            Printf("Interpeter tests: %-45s %s %d != %d\n",$test,"Test retuned wrong return code",$run_rc,$rc);
-            continue;
-        }
-
-        exec("diff -w -B -q $test$i_out $test$i_out", $_ ,$return_code);
-        if($return_code != 0){
-            Printf("Interpeter tests: %-45s output file differ from presset\n",$test);
-            continue;
-        }
-
-        $done_ok++;
-        if ($index % 20 == 0)
-            printf("Interpeter tests: %d/%d done, with %.1f%% correct\n", $index, $count, $done_ok / $index * 100);
+        error(44, $test . ".src");
     }
 }
+
+$i_rc = ".i_run_rc";
+$i_out = ".i_run_out";
+$p_rc = ".p_run_rc";
+$p_out = ".p_run_out";
+
+if (!$int_only) {
+    $index = 0;
+    $done_ok = 0;
+    foreach ($files as $test) {
+        $index++;
+
+        open_test($test, $in, $out, $rc, $src);
+
+        exec("cat \"$test.src\" | php $parser $in 2>&1", $run_out, $run_rc);
+        $rc_file = fopen($test . $p_rc, "w") or error(44, $test . $p_rc);
+        fwrite($rc_file, $run_rc);
+        fclose($rc_file);
+
+        $out_file = fopen($test . $p_out, "w") or error(44, $test . $p_out);
+        fwrite($out_file, implode("\n", $run_out));
+        fclose($out_file);
+
+        $break = false;
+        if ($rc != $run_rc) {
+            Printf("[Parser tests]: %-45s %s %d != %d\n", $test, "Test retuned wrong return code", $run_rc, $rc);
+            goto clean_up;
+        }
+
+        exec("diff -w -B -q $test$p_out $test$p_out", $_, $return_code);
+        if ($return_code != 0) {
+            Printf("[Parser tests]: %-45s output file differ from presset\n", $test);
+            goto clean_up;
+        }
+
+        $done_ok++;
+        if ($index % 20 == 0 || $index == $count) {
+            print_progress("Parser tests", $index, $count, $done_ok);
+        }
+    }
+}
+if (!$parser_only) {
+    $index = 0;
+    $done_ok = 0;
+    foreach ($files as $test) {
+        $index++;
+
+        open_test($test, $in, $out, $rc, $src);
+
+        exec("cat \"$test$p_out\" | python $interpreter 2>$1", $run_out, $run_rc);
+        $rc_file = fopen($test . $i_rc, "w") or error(44, $test . $i_rc);
+        fwrite($rc_file, $run_rc);
+        fclose($rc_file);
+
+        $out_file = fopen($test . $i_out, "w") or error(44, $test . $i_out);
+        fwrite($out_file, implode("\n", $run_out));
+        fclose($out_file);
+
+        if ($rc != $run_rc) {
+            Printf("[Interpeter tests]: %-45s %s %d != %d\n", $test, "Test retuned wrong return code", $run_rc, $rc);
+            goto clean_up;
+        }
+
+        exec("diff -w -B -q $test$i_out $test$i_out", $_, $return_code);
+        if (
+            $return_code != 0
+        ) {
+            Printf("[Interpeter tests]: %-45s output file differ from presset\n", $test);
+            goto clean_up;
+        }
+
+        $done_ok++;
+        if (
+            $index % 20 == 0 || $index == $count
+        )
+            print_progress("Interpeter tests", $index, $count, $done_ok);
+    }
+}
+
+clean_up: //error ocured, or tests are done
+if (!$no_clean) {
+    $index = 0;
+    foreach ($files as $test) {
+        $index++;
+        $tmp_files = array($test . $p_out, $test . $p_rc, $test . $i_out, $test . $i_rc);
+        foreach ($tmp_files as $file)
+            if (file_exists($file))
+                unlink($file);
+        if (
+            $index % 20 == 0 || $index == $count
+        )
+            print_progress("Clean-up", $index, $count, null);
+    }
+}
+
 
 exit (0);
