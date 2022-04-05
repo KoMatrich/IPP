@@ -241,12 +241,14 @@ function open_test($test, &$in, &$out, &$rc, &$src)
     }
 }
 
-$i_rc = ".i_run_rc";
-$i_out = ".i_run_out";
 $p_rc = ".p_run_rc";
 $p_out = ".p_run_out";
+$i_rc = ".i_run_rc";
+$i_out = ".i_run_out";
 
-if (!$int_only) {
+$correct = $files;
+
+if (!$int_only) {//run paser
     $index = 0;
     $done_ok = 0;
     foreach ($files as $test) {
@@ -263,16 +265,23 @@ if (!$int_only) {
         fwrite($out_file, implode("\n", $run_out));
         fclose($out_file);
 
-        $break = false;
-        if ($rc != $run_rc) {
-            Printf("[Parser tests]: %-45s %s %d != %d\n", $test, "Test retuned wrong return code", $run_rc, $rc);
-            goto clean_up;
-        }
+        if ($parser_only) {
+            if ($rc != $run_rc) {
+                Printf("[Parser tests]: %-45s %s %d != %d\n", $test, "Test retuned wrong return code", $run_rc, $rc);
+                continue;
+            }
 
-        exec("diff -w -B -q $test$p_out $test$p_out", $_, $return_code);
-        if ($return_code != 0) {
-            Printf("[Parser tests]: %-45s output file differ from presset\n", $test);
-            goto clean_up;
+            exec("diff -w -B -q $test$p_out $test$p_out", $_, $return_code);
+            if ($return_code != 0) {
+                Printf("[Parser tests]: %-45s output file differ from presset\n", $test);
+                continue;
+            }
+        } else {
+            if ($rc != 0) {
+                Printf("[Interpreter tests]: %-45s %s %d != %d\n", $test, "Test retuned wrong return code", $run_rc, $rc);
+                unset($correct[$index - 1]);
+                continue;
+            }
         }
 
         $done_ok++;
@@ -281,15 +290,19 @@ if (!$int_only) {
         }
     }
 }
-if (!$parser_only) {
+if (!$parser_only) {//run interpreter
     $index = 0;
     $done_ok = 0;
-    foreach ($files as $test) {
+    foreach ($correct as $test) {
         $index++;
 
         open_test($test, $in, $out, $rc, $src);
 
-        exec("cat \"$test$p_out\" | python $interpreter 2>$1", $run_out, $run_rc);
+        if ($int_only)
+            exec("cat \"$test.src\" | php $interpreter $in 2>&1", $run_out, $run_rc);
+        else
+            exec("cat \"$test.$p_out\" | php $interpreter $in 2>&1", $run_out, $run_rc);
+
         $rc_file = fopen($test . $i_rc, "w") or error(44, $test . $i_rc);
         fwrite($rc_file, $run_rc);
         fclose($rc_file);
@@ -300,7 +313,7 @@ if (!$parser_only) {
 
         if ($rc != $run_rc) {
             Printf("[Interpeter tests]: %-45s %s %d != %d\n", $test, "Test retuned wrong return code", $run_rc, $rc);
-            goto clean_up;
+            continue;
         }
 
         exec("diff -w -B -q $test$i_out $test$i_out", $_, $return_code);
@@ -308,7 +321,7 @@ if (!$parser_only) {
             $return_code != 0
         ) {
             Printf("[Interpeter tests]: %-45s output file differ from presset\n", $test);
-            goto clean_up;
+            continue;
         }
 
         $done_ok++;
@@ -319,8 +332,7 @@ if (!$parser_only) {
     }
 }
 
-clean_up: //error ocured, or tests are done
-if (!$no_clean) {
+if (!$no_clean) {//run clean-up
     $index = 0;
     foreach ($files as $test) {
         $index++;
