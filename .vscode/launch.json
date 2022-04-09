@@ -1,25 +1,36 @@
 {
     "configurations": [
-    {
-        "name": "Launch currently open script",
-        "args": [
-            "-d",
-            "./Testy/parse-only",
-            "-r",
-            "-po"
-        ],
-        "type": "php",
-        "request": "launch",
-        "program": "${file}",
-        "cwd": "${fileDirname}",
-        "port": 0,
-        "runtimeArgs": [
-            "-dxdebug.start_with_request=yes"
-        ],
-        "env": {
-            "XDEBUG_MODE": "debug,develop",
-            "XDEBUG_CONFIG": "client_port=${port}"
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": [
+                "--source=./Testy/interpret-only/valid/stack_test.src"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Launch currently open script",
+            "args": [
+                "-d",
+                "./Testy/parse-only",
+                "-r",
+                "-po"
+            ],
+            "type": "php",
+            "request": "launch",
+            "program": "${file}",
+            "cwd": "${fileDirname}",
+            "port": 0,
+            "runtimeArgs": [
+                "-dxdebug.start_with_request=yes"
+            ],
+            "env": {
+                "XDEBUG_MODE": "debug,develop",
+                "XDEBUG_CONFIG": "client_port=${port}"
+            }
         }
-    }
     ]
 }
