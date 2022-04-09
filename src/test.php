@@ -3,20 +3,21 @@ function error(int $code, string $target)
 {
     $msg = "";
     switch ($code) {
-        case 40:
-            $msg = "\"$target\" Wrong option type, use -h for help";
+        case 10:
+            if($target == "") {
+                $msg = "Missing option, use -h for help";
+            } else {
+                $msg = "\"$target\" Wrong option/s, use -h for help";
+            }
+            break;
+        case 11:
+            $msg = "failed to open file \"$target\"";
+            break;
+        case 12:
+            $msg = "failed to write to file \"$target\"";
             break;
         case 41:
             $msg = "\"$target\" File or directory not found";
-            break;
-        case 42:
-            $msg = "Mising argument for \"$target\" option";
-            break;
-        case 43:
-            $msg = "Wrong combination of arguments \"$target\"";
-            break;
-        case 44:
-            $msg = "Creation of file \"$target\" failed";
             break;
         case 99:
             $msg = "Internal";
@@ -94,7 +95,7 @@ foreach($argv as $arg){
 
 function getarg($index,$argc,$argv,$value){
     if($index >= $argc) {
-        error(42, $value);
+        error(10, $value);
     }
     return $argv[$index];
 }
@@ -137,21 +138,21 @@ for(; $index < $argc; $index++) {
             $no_clean = true;
             break;
         default:
-            error(40, $value);
+            error(10, $value);
         }
     }else{
-        error(40, $value);
+        error(10, $value);
     }
 }
 
 if($parser_only && $int_only)
-    error(43, "--parser-only,--int-only");
+    error(10, "--parser-only,--int-only");
 
 function open($dir, $recursive)
 {
     $content = scandir($dir, 1);
     if (!$content)
-        error(41, $dir);
+        error(11, $dir);
 
     $files = array();
     $file_name = "";
@@ -184,11 +185,11 @@ function open($dir, $recursive)
 
 if (!$int_only)
     if (file_exists($parser) == false)
-        error(41, $parser);
+        error(11, $parser);
 
 if (!$parser_only)
     if (file_exists($interpreter) == false)
-        error(41, $interpreter);
+        error(11, $interpreter);
 
 $files = open($dir, $recursive);
 $count = count($files);
@@ -204,40 +205,40 @@ function print_progress($name, $index, $count, $done_ok)
 }
 
 //get content of test files to variables
-function open_test($test, &$in, &$out, &$rc, &$src)
+function get_paths($test, &$in, &$out, &$rc, &$src)
 {
     if (file_exists($test . ".in") == false) {
-        $in = fopen($test . ".in", "w") or error(44, $test . ".in");
+        $in = fopen($test . ".in", "w") or error(12, $test . ".in");
         fclose($in);
     }
     $in = file_get_contents($test . ".in");
     if ($in === false)
-        error(44, $test . ".in");
+        error(11, $test . ".in");
 
     if (file_exists($test . ".out") == false) {
-        $out = fopen($test . ".out", "w") or error(44, $test . ".out");
+        $out = fopen($test . ".out", "w") or error(12, $test . ".out");
         fclose($out);
     }
     $out = file($test . ".out", FILE_IGNORE_NEW_LINES);
     if ($out === false)
-        error(44, $test . ".out");
+        error(11, $test . ".out");
 
     if (file_exists($test . ".rc") == false) {
-        $rc = fopen($test . ".rc", "w") or error(44, $test . ".rc");
+        $rc = fopen($test . ".rc", "w") or error(12, $test . ".rc");
         fwrite($rc, "0");
         fclose($rc);
     }
     $rc = file_get_contents($test . ".rc");
     if ($rc === false)
-        error(44, $test . ".rc");
+        error(11, $test . ".rc");
 
     if (file_exists($test . ".src") == false) {
-        error(44, $test . ".src");
+        error(11, $test . ".src");
     }
 
     $src = file_get_contents($test . ".src");
     if ($src === false) {
-        error(44, $test . ".src");
+        error(11, $test . ".src");
     }
 }
 
@@ -254,14 +255,14 @@ if (!$int_only) {//run paser
     foreach ($files as $test) {
         $index++;
 
-        open_test($test, $in, $out, $rc, $src);
+        get_paths($test, $in, $out, $rc, $src);
 
         exec("cat \"$test.src\" | php $parser $in 2>&1", $run_out, $run_rc);
-        $rc_file = fopen($test . $p_rc, "w") or error(44, $test . $p_rc);
+        $rc_file = fopen($test . $p_rc, "w") or error(12, $test . $p_rc);
         fwrite($rc_file, $run_rc);
         fclose($rc_file);
 
-        $out_file = fopen($test . $p_out, "w") or error(44, $test . $p_out);
+        $out_file = fopen($test . $p_out, "w") or error(12, $test . $p_out);
         fwrite($out_file, implode("\n", $run_out));
         fclose($out_file);
 
@@ -296,18 +297,18 @@ if (!$parser_only) {//run interpreter
     foreach ($correct as $test) {
         $index++;
 
-        open_test($test, $in, $out, $rc, $src);
+        get_paths($test, $in, $out, $rc, $src);
 
         if ($int_only)
             exec("cat \"$test.src\" | php $interpreter $in 2>&1", $run_out, $run_rc);
         else
             exec("cat \"$test.$p_out\" | php $interpreter $in 2>&1", $run_out, $run_rc);
 
-        $rc_file = fopen($test . $i_rc, "w") or error(44, $test . $i_rc);
+        $rc_file = fopen($test . $i_rc, "w") or error(12, $test . $i_rc);
         fwrite($rc_file, $run_rc);
         fclose($rc_file);
 
-        $out_file = fopen($test . $i_out, "w") or error(44, $test . $i_out);
+        $out_file = fopen($test . $i_out, "w") or error(12, $test . $i_out);
         fwrite($out_file, implode("\n", $run_out));
         fclose($out_file);
 
