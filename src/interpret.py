@@ -51,12 +51,22 @@ def print_help():
     exit()
 
 
+def isInt(s: str):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+    except Exception as e:
+        exit_error(f'{e}', 99)
+
+
 def open_file(filepath: 'str'):
     if(filepath != ''):
         try:
             input = open(filepath, 'r')
         except FileNotFoundError:
-            exit_error(f'{filepath} file not found', 11)
+            exit_error(f'"{filepath}" file not found', 11)
         except Exception as e:
             exit_error(f'{e}', 99)
     else:
@@ -71,9 +81,9 @@ def get_xml(sourcefile: 'str'):
         else:
             xml_tree = ET.parse(sys.stdin)
     except FileNotFoundError:
-        exit_error(f'{sourcefile} file not found', 11)
+        exit_error(f'"{sourcefile}" file not found', 11)
     except ET.ParseError:
-        exit_error(f'{sourcefile} is not well-formed', 31)
+        exit_error(f'"{sourcefile}" file is not well-formed', 31)
     except Exception as e:
         exit_error(f'{e}', 99)
     return xml_tree.getroot()
@@ -82,18 +92,40 @@ def get_xml(sourcefile: 'str'):
 class Argument:
     def __init__(self, arg: 'ET.Element'):
         if(arg.get('type') is None):
-            exit_error(f'Argument {arg.tag} has no type', 32)
+            exit_error(f'Argument "{arg.tag}" has no type', 32)
         self.type = arg.get('type')
-        if(self.type not in ['int', 'bool', 'string']):
-            pass
         if(arg.text is None):
-            exit_error(f'Argument {arg.tag} has no value', 32)
-        self.frame = arg.text[:2]
-        if(self.frame not in ['GF', 'LF', 'TF']):
-            exit_error(f'Argument {arg.tag} has invalid frame', 32)
-        self.name = arg.text[3:]
-        if(self.name == ''):
-            exit_error(f'Argument {arg.tag} has no name', 32)
+            exit_error(f'Argument "{arg.tag}" has no value', 32)
+
+        if(self.type == 'var'):
+            self.frame = arg.text[:2]
+            if(self.frame not in ['GF', 'LF', 'TF']):
+                exit_error(
+                    f'Argument "{arg.tag}" has invalid frame "{self.frame}"', 32)
+            self.name = arg.text[3:]
+            if(self.name == ''):
+                exit_error(f'Argument "{arg.tag}" has no name', 32)
+        else:
+            self.content = arg.text
+            if(self.type == 'int'):
+                if(not isInt(self.content)):
+                    self.content = int(self.content)
+                else:
+                    exit_error(
+                        f'Argument "{arg.tag}" of type "{self.type}" has invalid value "{self.content}"', 32)
+            elif(self.type == 'bool'):
+                if(self.content in ['true', 'false']):
+                    self.content = self.content == 'true'
+                else:
+                    exit_error(
+                        f'Argument "{arg.tag}" of type "{self.type}" has invalid value "{self.content}"', 32)
+            elif(self.type == 'string'):
+                self.content = self.content
+            elif(self.type == 'type'):
+                self.content = self.content.lower()
+            else:
+                exit_error(
+                    f'Argument "{arg.tag}" has invalid type "{self.type}"', 32)
 
 
 class Instruction(object):
@@ -102,80 +134,120 @@ class Instruction(object):
         if(self.opcode is None):
             exit_error('opcode is missing', 32)
         self.opcode = self.opcode.lower()
-        if(self.opcode not in
-           [
-               'move', 'createframe', 'pushframe', 'popframe', 'defvar', 'call', 'return',  # frames
-               'pushs', 'pops',  # stack
-               'add', 'sub', 'mul', 'idiv', 'lt', 'gt', 'eq',  # arithmetic
-               'and', 'or', 'not', 'int2char', 'string2int',
-               'read', 'write',  # io
-               'concat', 'strlen', 'getchar', 'setchar',  # strings
-               'type',  # type
-               'label', 'jump', 'jumpifeq', 'jumpifneq', 'exit',  # labels
-               'dprint', 'break'  # debug
-           ]):
-            exit_error(f'{self.opcode} is not a valid opcode', 32)
+        self._set_args(instruction)
+        self._check_args()
 
-        self.arguments = [Argument]*len(instruction)
-        for arg in instruction:
-            name = arg.tag[:3].lower()
-            if(name != 'arg'):
-                exit_error('argument does not have a valid tag (prefix)', 32)
-            number = arg.tag[3:]
-            if(not number.isnumeric()):
-                exit_error('argument does not have a valid tag (index)', 32)
+    def xml_argument_order(self, arg: 'ET.Element'):
+        name = arg.tag[:3].lower()
+        if(name != 'arg'):
+            exit_error(
+                f'Argument "{arg.tag}" does not have a valid tag prefix "{name}"', 32)
+        number = arg.tag[3:]
+        if(not number.isnumeric()):
+            exit_error(
+                f'Argument "{arg.tag}" does not have a valid tag index "{number}"', 32)
+        if(isInt(number)):
             number = int(number)-1
-            if (number < 0) or (len(self.arguments) <= number):
-                exit_error(
-                    'argument does not have a valid tag (index out of bounds)', 32)
-            if(self.arguments[number] is not None):
-                exit_error(
-                    'argument does not have a valid tag (index already used)', 32)
-            self.arguments[number] = Argument(arg)
+        else:
+            exit_error('Argument index is not an integer', 32)
+        if (number < 0) or (len(self.arguments) <= number):
+            exit_error(
+                f'argument "{arg.tag}" tag index "{number}" is not it <0,{len(self.arguments)})', 32)
+        return number
 
-        # @todo switch of function based on opcode
+    def _set_args(self, instruction: ET.Element):
+        self.arguments = [Argument]*len(instruction)
+        args = sorted(instruction, key=self.xml_argument_order)
+        index_list: 'list[str]' = []
+        for arg in args:
+            if(arg.tag in index_list):
+                exit_error('argument has duplicate tag index', 32)
+            else:
+                index_list.append(arg.tag)
+        self.arguments = [Argument(arg) for arg in args]
 
-    def _get_method(self):
-        method_name = f'_case_{self.opcode}'
-        method = getattr(self, method_name,
-                         lambda: exit_error(f'{self.opcode} is not a valid case', 32))
-        return method()
+    def _check_args(self):
+        method_name = f'_case_{self.opcode}_check_args'
+        check_args = getattr((self), method_name,
+                             lambda: exit_error(f'{self.opcode} is not valid instruction (while arg checking)', 32))
+        check_args()
 
     def run(self):
-        method = self._get_method()
-        method()
+        method_name = f'_case_{self.opcode}_run'
+        run = getattr(self, method_name,
+                      lambda: exit_error(f'{self.opcode} is not valid instruction (selecting function)', 32),)
+        run()
 
-    def _case_pushs(self):
+    def _case_move_check_args(self):
+        if(len(self.arguments) != 2):
+            exit_error(f'{self.opcode} has invalid number of arguments', 32)
+
+    def _case_move_run(self):
+        pass
+
+    def _case_defvar_check_args(self):
+        pass
+
+    def _case_defvar_run(self):
         pass
 
 
+def xml_instruction_order(instruction: 'ET.Element'):
+    if(instruction.tag != 'instruction'):
+        exit_error(f'{instruction.tag} tag is not instruction', 32)
+    index = instruction.get('order')
+    if(index is None):
+        exit_error(f'Instruction "{instruction.tag}" has no order', 32)
+    index = str(index)
+    if(not isInt(index)):
+        exit_error(
+            f'Instruction "{instruction.tag}" order "{index}" is not a number', 32)
+    index = int(index)-1
+    if(index < 0):
+        exit_error(
+            f'Instruction "{instruction.tag}" order "{index}" is negative number', 32)
+    return int(instruction.attrib["order"])
+
+
+def get_instructions(xml_tree: 'ET.Element'):
+    sorted_inst = sorted(xml_tree, key=xml_instruction_order)
+    index_list: 'list[str]' = []
+    instuctions: 'list[Instruction]' = []
+
+    for inst in sorted_inst:
+        order = inst.get('order')
+        if(order is None):
+            exit_error('Instruction has no order', 32)
+        if(order in index_list):
+            exit_error('Instruction index is already used', 32)
+        index_list.append(order)
+
+        instuctions.append(Instruction(inst))
+    return instuctions
+
+
+class frame:
+    def __init__(self):
+        self.variables = {}
+        self.lables = {}
+
+
 def run(xml_tree: 'ET.Element', input: 'TextIO'):
-    instuctions = []
     if(xml_tree.tag != 'program'):
         exit_error('root tag is not program', 32)
     if(xml_tree.get('language') != 'IPPcode22'):
         exit_error('language is not IPPcode22', 32)
 
-    #@todo discord
-    for inst in xml_tree:
-        if(inst.tag != 'instruction'):
-            exit_error('instruction tag is not instruction', 32)
-        index = inst.get('order')
-        if(index is None):
-            exit_error('Instruction has no order', 32)
-        index = str(index)
-        if(not index.isnumeric()):
-            exit_error('Instruction has no order', 32)
-        index = int(index)-1
-        if(index < 0) or (len(xml_tree) <= index):
-            exit_error('Instruction has invalid order (out of bounds)', 32)
-        if(instuctions[index] is not None):
-            exit_error('Instruction index is already used', 32)
+    instructions = get_instructions(xml_tree)
+    index = 0
 
-        instuctions[index] = Instruction(inst)
+    GF: 'frame' = frame()
+    LF: 'frame' = frame()
+    TF: 'list[frame]' = []
 
-    # @todo: check if all instructions are defined
-    # @todo: frames are defined
+    while(index < len(instructions)):
+        pass
+        #index = instructions[index].run(index, GF, LF, TF, input)
 
 
 def main(argv: 'list[str]'):

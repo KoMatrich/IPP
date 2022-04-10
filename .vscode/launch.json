@@ -6,7 +6,8 @@
             "request": "launch",
             "program": "${file}",
             "args": [
-                "--source=./Testy/interpret-only/valid/stack_test.src"
+                "--source=./Testy/interpret-only/valid/read.src",
+                "--input=./Testy/interpret-only/valid/read.in"
             ],
             "console": "integratedTerminal",
             "justMyCode": true
