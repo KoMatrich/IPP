@@ -103,14 +103,17 @@ class Instruction(object):
             exit_error('opcode is missing', 32)
         self.opcode = self.opcode.lower()
         if(self.opcode not in
-           ['move', 'createframe', 'pushframe', 'popframe', 'defvar', 'call', 'return', #frames
-            'pushs', 'pops',                                                            #stack
-            'add','sub','mul','idiv','lt','gt','eq',                                    #arithmetic
-            'and','or','not','int2char', 'string2int',
-            'read', 'write',                                                            #io
-            'concat', 'strlen', 'getchar', 'setchar',                                   #strings
-            'type', 'label','jump','jumpifeq','jumpifneq', 'exit',
-            'dprint', 'break']):
+           [
+               'move', 'createframe', 'pushframe', 'popframe', 'defvar', 'call', 'return',  # frames
+               'pushs', 'pops',  # stack
+               'add', 'sub', 'mul', 'idiv', 'lt', 'gt', 'eq',  # arithmetic
+               'and', 'or', 'not', 'int2char', 'string2int',
+               'read', 'write',  # io
+               'concat', 'strlen', 'getchar', 'setchar',  # strings
+               'type',  # type
+               'label', 'jump', 'jumpifeq', 'jumpifneq', 'exit',  # labels
+               'dprint', 'break'  # debug
+           ]):
             exit_error(f'{self.opcode} is not a valid opcode', 32)
 
         self.arguments = [Argument]*len(instruction)
@@ -130,13 +133,12 @@ class Instruction(object):
                     'argument does not have a valid tag (index already used)', 32)
             self.arguments[number] = Argument(arg)
 
-        #@todo switch of function based on opcode
+        # @todo switch of function based on opcode
 
     def _get_method(self):
-        case = self.opcode.lower()
-        method_name = f'_case_{case.lower()}'
+        method_name = f'_case_{self.opcode}'
         method = getattr(self, method_name,
-                         lambda: exit_error(f'{case} is not a valid case', 32))
+                         lambda: exit_error(f'{self.opcode} is not a valid case', 32))
         return method()
 
     def run(self):
@@ -154,6 +156,7 @@ def run(xml_tree: 'ET.Element', input: 'TextIO'):
     if(xml_tree.get('language') != 'IPPcode22'):
         exit_error('language is not IPPcode22', 32)
 
+    #@todo discord
     for inst in xml_tree:
         if(inst.tag != 'instruction'):
             exit_error('instruction tag is not instruction', 32)
@@ -171,8 +174,8 @@ def run(xml_tree: 'ET.Element', input: 'TextIO'):
 
         instuctions[index] = Instruction(inst)
 
-    #@todo: check if all instructions are defined
-    #@todo: frames are defined
+    # @todo: check if all instructions are defined
+    # @todo: frames are defined
 
 
 def main(argv: 'list[str]'):
