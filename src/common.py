@@ -25,6 +25,7 @@ def isInt(s: str):
 
 
 var_types = ['int', 'bool', 'string', 'nil']
+symb = var_types + ['var']
 
 if __name__ == "__main__":
     exit_error('This file is not meant to be run directly', 1)

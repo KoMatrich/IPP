@@ -5,19 +5,14 @@ from common import *
 class variables:
     def __init__(self, name: str):
         self._name = name
+        sd
 
     def set(self, type: 'str', value: 'str'):
         self._type = type
         self._value = value
 
-    def __type__(self):
-        return self._type
-
     def __str__(self):
         return f'{self._type} {self._name}={self._value}'
-
-    def __eq__(self, __o: object) -> bool:
-        return __o.__getattribute__('type') == self._type and __o.__getattribute__('name') == self._name and __o.__getattribute__('value') == self.value
 
     def define(self, type: 'str', value: 'str'):
         if(self.type is not None):
@@ -61,6 +56,9 @@ class Frame:
     def __init__(self):
         self.variables: 'list[variables]' = []
 
+    def __str__(self) -> str:
+        return '\n'.join([str(var) for var in self.variables])
+
     def createvar(self, name: str):
         if(name in self.variables):
             exit_error(f'Variable "{name}" is already exists', 52)
@@ -96,6 +94,11 @@ class Stack(Generic[T]):
             exit_error('Stack is empty', 55)
         return self._stack[-1]
 
+    def __str__(self) -> str:
+        if(len(self._stack) != 0):
+            return str(self.top())
+        return ''
+
 
 class clabel:
     def __init__(self, name: str, pos: int):
@@ -125,8 +128,17 @@ class Memory:
 
         self._input: 'TextIO' = input
 
-    def get_line(self):
-        self._input.readline()
+    def __str__(self) -> str:
+        lines = f'index:{self.index}\n'
+        lines += f'gf:\n{self.gf}'
+        lines += f'tf:\n{self.tf}'
+        lines += f'lf:\n{self.lf}'
+        lines += f'stack:\n{self.stack}'
+        lines += f'labels:\n{self.labels}'
+        return lines
+
+    def getline(self):
+        return self._input.readline()
 
     def defvar(self, frame: 'str', name: 'str'):
         if(frame == 'GF'):
@@ -141,7 +153,7 @@ class Memory:
             exit_error(f'Invalid frame "{frame}"', 99)
         pass
 
-    def getvalue(self, frame: 'str', type: 'str', name: 'str'):
+    def getvalue(self, frame: 'str', name: 'str'):
         if(frame == 'GF'):
             var = self.gf.getvar(name)
         elif(frame == 'TF'):
@@ -153,12 +165,11 @@ class Memory:
         else:
             exit_error(f'Invalid frame "{frame}"', 52)
 
-        if(var.type != type):
-            exit_error(
-                f'Variable "{name}" is of type "{var.type}" and cannot be used as "{type}"', 53)
+        if(var.type != ""):
+            exit_error('Variable is not defined', 52)
         return var.getvalue()
 
-    def setvalue(self, frame: 'str', type: 'str', name: 'str', value: 'str'):
+    def setvalue(self, frame: 'str', name: 'str', value: 'str'):
         if(frame == 'GF'):
             var = self.gf.getvar(name)
         elif(frame == 'TF'):
@@ -170,9 +181,8 @@ class Memory:
         else:
             exit_error(f'Invalid frame "{frame}"', 52)
 
-        if(var.type != type):
-            exit_error(
-                f'Variable "{name}" is of type "{var.type}" and cannot be set to "{type}"', 53)
+        if(var.type != ""):
+            exit_error('Variable is not defined', 52)
         var.setvalue(value)
 
     def createframe(self):
