@@ -22,3 +22,9 @@ def isInt(s: str):
         return False
     except Exception as e:
         exit_error(f'{e}', 99)
+
+
+var_types = ['int', 'bool', 'string', 'nil']
+
+if __name__ == "__main__":
+    exit_error('This file is not meant to be run directly', 1)
