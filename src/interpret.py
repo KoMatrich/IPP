@@ -2,10 +2,14 @@
 # coding: latin-1
 
 
+from array import array
 import sys
 import getopt
 from typing import TextIO
 import xml.etree.ElementTree as ET
+
+from common import *
+from vir_machine import 
 
 """
 10 - chybějící parametr skriptu (je-li třeba) nebo použití zakázané kombinace parametrů;
@@ -34,33 +38,6 @@ interpret.py
 58 - běhová chyba interpretace – chybná práce s řetězcem.
 """
 
-
-def exit_error(error_message: 'str', rc: 'int'):
-    print(f'interpret.py: {error_message}')
-    exit(rc)
-
-
-def print_help():
-    print('Usage: interpret.py [--help] [--source=<source>] [--input=<input>]')
-    print('\t--help                 Print this help')
-    print('Inputs:')
-    print('\t--source=<source>      Input XML file')
-    print('\t--input=<input>        Input file with inputs for interpretetation')
-    print('\t\t At least one of the two inputs is required')
-    print('\t\t If one input file is missing, the input will be read from stdin')
-    exit()
-
-
-def isInt(s: str):
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False
-    except Exception as e:
-        exit_error(f'{e}', 99)
-
-
 def open_file(filepath: 'str'):
     if(filepath != ''):
         try:
@@ -87,7 +64,6 @@ def get_xml(sourcefile: 'str'):
     except Exception as e:
         exit_error(f'{e}', 99)
     return xml_tree.getroot()
-
 
 class Argument:
     def __init__(self, arg: 'ET.Element'):
@@ -127,6 +103,7 @@ class Argument:
                 exit_error(
                     f'Argument "{arg.tag}" has invalid type "{self.type}"', 32)
 
+symb = ['var']+var_type
 
 class Instruction(object):
     def __init__(self, instruction: ET.Element):
@@ -156,7 +133,7 @@ class Instruction(object):
         return number
 
     def _set_args(self, instruction: ET.Element):
-        self.arguments = [Argument]*len(instruction)
+        self.arguments = array('Argument', [])
         args = sorted(instruction, key=self.xml_argument_order)
         index_list: 'list[str]' = []
         for arg in args:
@@ -172,23 +149,29 @@ class Instruction(object):
                              lambda: exit_error(f'{self.opcode} is not valid instruction (while arg checking)', 32))
         check_args()
 
-    def run(self):
+    def run(self, memory: 'Memory'):
         method_name = f'_case_{self.opcode}_run'
-        run = getattr(self, method_name,
-                      lambda: exit_error(f'{self.opcode} is not valid instruction (selecting function)', 32),)
-        run()
+        method = getattr(self, method_name)(memory)
+        if(method is None):
+            exit_error(f'{self.opcode} is not valid instruction', 32)
+        return memory
 
     def _case_move_check_args(self):
         if(len(self.arguments) != 2):
             exit_error(f'{self.opcode} has invalid number of arguments', 32)
+        if(self.arguments[0].type != 'var'):
+            exit_error(f'{self.opcode} has invalid type of first argument', 32)
+        if(not self.arguments[1].type in symb):
+            exit_error(
+                f'{self.opcode} has invalid type of second argument', 32)
 
-    def _case_move_run(self):
+    def _case_move_run(self, memory: 'Memory'):
         pass
 
     def _case_defvar_check_args(self):
         pass
 
-    def _case_defvar_run(self):
+    def _case_defvar_run(self, memory: 'Memory'):
         pass
 
 
@@ -226,12 +209,6 @@ def get_instructions(xml_tree: 'ET.Element'):
     return instuctions
 
 
-class frame:
-    def __init__(self):
-        self.variables = {}
-        self.lables = {}
-
-
 def run(xml_tree: 'ET.Element', input: 'TextIO'):
     if(xml_tree.tag != 'program'):
         exit_error('root tag is not program', 32)
@@ -239,15 +216,10 @@ def run(xml_tree: 'ET.Element', input: 'TextIO'):
         exit_error('language is not IPPcode22', 32)
 
     instructions = get_instructions(xml_tree)
-    index = 0
+    memory = Memory(input)
 
-    GF: 'frame' = frame()
-    LF: 'frame' = frame()
-    TF: 'list[frame]' = []
-
-    while(index < len(instructions)):
-        pass
-        #index = instructions[index].run(index, GF, LF, TF, input)
+    while(memory.index < len(instructions)):
+        instructions[memory.index].run(memory)
 
 
 def main(argv: 'list[str]'):
