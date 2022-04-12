@@ -83,7 +83,7 @@ def run(xml_tree: 'ET.Element', input: 'TextIO'):
     memory = Memory(input)
 
     while(memory.index < len(instructions)):
-        print(f'Memory:\n{memory}')
+        # print(f'Memory:\n{memory}')
         instructions[memory.index].run(memory)
 
 

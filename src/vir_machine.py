@@ -2,75 +2,48 @@ from typing import Generic, TextIO, TypeVar
 from common import *
 
 
-class variables:
+class Variable:
     def __init__(self, name: str):
         self._name = name
-        sd
-
-    def set(self, type: 'str', value: 'str'):
-        self._type = type
-        self._value = value
+        self._value = None
 
     def __str__(self):
-        return f'{self._type} {self._name}={self._value}'
-
-    def define(self, type: 'str', value: 'str'):
-        if(self.type is not None):
-            exit_error(f'Variable "{self._name}" is already defined', 52)
-        if(type not in var_types):
-            exit_error(
-                f'Variable "{self._name}" has invalid type "{type}"', 53)
-        self.type = type
-        self.value = value
+        if(self._value is None):
+            return f'{self._name} Not defined'
+        return f'{self._name}="{self._value}"'
 
     def setvalue(self, value: 'str'):
-        if(self.type is None):
-            exit_error(f'Variable "{self._name}" is not defined', 52)
-        if(self.type == 'int' and not isInt(value)):
-            exit_error(
-                f'Variable "{self._name}" is of type "{self.type}" and cannot be set to "{value}"', 53)
-        if(self.type == 'bool' and value not in ['true', 'false']):
-            exit_error(
-                f'Variable "{self._name}" is of type "{self.type}" and cannot be set to "{value}"', 53)
-        if(self.type == 'nil' and value != 'nil'):
-            exit_error(
-                f'Variable "{self._name}" is of type "{self.type}" and cannot be set to "{value}"', 53)
-        self.value = value
+        self._value = value
 
-    def getname(self):
+    def getname(self) -> 'str':
         return self._name
 
-    def getvalue(self):
+    def getvalue(self) -> 'str':
         if(self._value is None):
             exit_error('Using variable that is not defined', 52)
         return self._value
 
-    def gettype(self):
-        if(self._type is None):
-            exit_error(
-                f'Using variable that "{self._name}" is not defined', 52)
-        return self._type
-
 
 class Frame:
     def __init__(self):
-        self.variables: 'list[variables]' = []
+        self.variables: 'list[Variable]' = []
 
     def __str__(self) -> str:
         return '\n'.join([str(var) for var in self.variables])
 
     def createvar(self, name: str):
         if(name in self.variables):
-            exit_error(f'Variable "{name}" is already exists', 52)
+            exit_error(f'Variable "{name}" already exists (F)', 52)
         else:
-            self.variables.append(variables(name))
+            self.variables.append(Variable(name))
             return self.variables[-1]
 
-    def getvar(self, name: str):
-        if(name in self.variables):
-            return self.variables[name]
-        else:
-            exit_error(f'Variable "{name}" is not defined', 52)
+    def getvar(self, name: str) -> 'Variable':
+        for var in self.variables:
+            if(name == var.getname()):
+                return var
+
+        exit_error(f'Variable "{name}" is not defined (F)', 52)
 
 
 T = TypeVar('T')
@@ -84,20 +57,23 @@ class Stack(Generic[T]):
         self._stack.append(value)
 
     def pop(self) -> T:
-        if(len(self._stack) > 0):
+        if not self.isempty():
             return self._stack.pop()
         else:
             exit_error('Stack is empty', 55)
 
     def top(self) -> T:
-        if(len(self._stack) == 0):
+        if(self.isempty()):
             exit_error('Stack is empty', 55)
         return self._stack[-1]
 
+    def isempty(self) -> bool:
+        return len(self._stack) == 0
+
     def __str__(self) -> str:
-        if(len(self._stack) != 0):
+        if not self.isempty():
             return str(self.top())
-        return ''
+        return 'Empty'
 
 
 class clabel:
@@ -105,13 +81,13 @@ class clabel:
         self._name = name
         self._pos = pos
 
-    def __eq__(self, __o: object):
+    def __eq__(self, __o: object) -> bool:
         return __o.__getattribute__('name') == self._name
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'{self._name}:{self._pos}'
 
-    def getpos(self):
+    def getpos(self) -> int:
         return self._pos
 
 
@@ -130,14 +106,17 @@ class Memory:
 
     def __str__(self) -> str:
         lines = f'index:{self.index}\n'
-        lines += f'gf:\n{self.gf}'
-        lines += f'tf:\n{self.tf}'
-        lines += f'lf:\n{self.lf}'
-        lines += f'stack:\n{self.stack}'
-        lines += f'labels:\n{self.labels}'
+        lines += f'GF:\n{self.gf}\n'
+        if(self.tf is None):
+            lines += f'TF:none\n'
+        else:
+            lines += f'TF:\n{self.tf}\n'
+        lines += f'LF:\n{self.lf}\n'
+        lines += f'Stack:\n{self.stack}\n'
+        lines += f'Labels:\n{self.labels}\n'
         return lines
 
-    def getline(self):
+    def getline(self) -> 'str':
         return self._input.readline()
 
     def defvar(self, frame: 'str', name: 'str'):
@@ -153,7 +132,7 @@ class Memory:
             exit_error(f'Invalid frame "{frame}"', 99)
         pass
 
-    def getvalue(self, frame: 'str', name: 'str'):
+    def getvalue(self, frame: 'str', name: 'str') -> 'str':
         if(frame == 'GF'):
             var = self.gf.getvar(name)
         elif(frame == 'TF'):
@@ -164,9 +143,6 @@ class Memory:
             var = self.lf.top().getvar(name)
         else:
             exit_error(f'Invalid frame "{frame}"', 52)
-
-        if(var.type != ""):
-            exit_error('Variable is not defined', 52)
         return var.getvalue()
 
     def setvalue(self, frame: 'str', name: 'str', value: 'str'):
@@ -180,9 +156,6 @@ class Memory:
             var = self.lf.top().getvar(name)
         else:
             exit_error(f'Invalid frame "{frame}"', 52)
-
-        if(var.type != ""):
-            exit_error('Variable is not defined', 52)
         var.setvalue(value)
 
     def createframe(self):
@@ -204,7 +177,7 @@ class Memory:
             exit_error(f'Label "{name}" was already defined', 52)
         self.labels.append(clabel(name, pos))
 
-    def _getlabel(self, name: str):
+    def _getlabel(self, name: str) -> 'clabel':
         if(name in self.labels):
             return self.labels[name]
         else:

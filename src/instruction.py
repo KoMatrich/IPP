@@ -64,8 +64,45 @@ class Instruction(object):
         self._set_args(instruction)
         self._check_args()
 
-    def _argument_order_check(self, args: 'list[ET.Element]'):
+    # executes the instruction
+    # internally calls the correct method for the opcode
+    def run(self, memory: 'Memory'):
+        method_name = f'_case_{self.opcode}_run'
+        method = getattr(self, method_name)
+        if(method is None):
+            exit_error(f'{self.opcode} is not valid instruction', 32)
+        method(memory)
+        memory.inccounter()
+        return memory
+
+    # gets the value of an argument from memory
+    # or from the argument itself
+    def getval(self, memory: 'Memory', arg_index: 'int'):
+        if(self.args[arg_index].type == 'var'):
+            var = memory.getvalue(
+                self.args[arg_index].frame, self.args[arg_index].name)
+        else:
+            var = self.args[arg_index].content
+        return var
+
+    # sets the value of an argument in memory
+    # protection against setting a value to constant
+    def setval(self, memory: 'Memory', arg_index: 'int', value: 'str'):
+        if(self.args[arg_index].type == 'var'):
+            memory.setvalue(self.args[arg_index].frame,
+                            self.args[arg_index].name, value)
+        else:
+            exit_error('cannot set value to non-variable argument', 32)
+
+    # sets the arguments of the instruction and sorts them
+    def _set_args(self, instruction: ET.Element):
+        self.args: 'list[Argument]' = []
+        args = sorted(instruction, key=lambda x: x.tag[3:])
+
+        index_list: 'list[str]' = []
+        max = len(args)+1
         for arg in args:
+            # check if argument is valid
             name = arg.tag[:3].lower()
             if(name != 'arg'):
                 exit_error(
@@ -78,21 +115,11 @@ class Instruction(object):
                 exit_error(
                     f'"{self.opcode}" argument index is not an integer', 32)
             number = int(number)
-            max = len(args)+1
             if (number < 1) or (max < number):
                 exit_error(
                     f'"{self.opcode}" argument "{arg.tag}" tag index "{number}" is not it <1:{max}>', 32)
 
-    def _xml_argument_order(self, arg: 'ET.Element'):
-        return arg.tag[3:]
-
-    def _set_args(self, instruction: ET.Element):
-        self.args: 'list[Argument]' = []
-        args = sorted(instruction, key=self._xml_argument_order)
-        self._argument_order_check(args)
-        index_list: 'list[str]' = []
-
-        for arg in args:
+            # check for duplicates
             if(arg.tag in index_list):
                 exit_error('argument has duplicate tag index', 32)
             else:
@@ -100,26 +127,22 @@ class Instruction(object):
 
         self.args = [Argument(arg) for arg in args]
 
+    # calls the correct argument check method for the opcode
     def _check_args(self):
         method_name = f'_case_{self.opcode}_check_args'
         check_args = getattr((self), method_name,
                              lambda: exit_error(f'{self.opcode} is not valid instruction (while arg checking)', 32))
         check_args()
 
+    # checks the number of arguments of the instruction
     def _check_number_args(self, arg_count: 'int'):
         if(len(self.args) != arg_count):
             exit_error(
                 f'{self.opcode} has {len(self.args)} arguments, but {arg_count} are required', 32)
 
-    def run(self, memory: 'Memory'):
-        method_name = f'_case_{self.opcode}_run'
-        method = getattr(self, method_name)
-        if(method is None):
-            exit_error(f'{self.opcode} is not valid instruction', 32)
-        method(memory)
-        memory.inccounter()
-        return memory
-
+    ############################################################################
+    # Instructions implementations
+    ############################################################################
     def _case_move_check_args(self):
         self._check_number_args(2)
         if self.args[0].type != 'var':
@@ -128,24 +151,9 @@ class Instruction(object):
             exit_error(f'Argument 2 is not of type {symb}', 32)
 
     def _case_move_run(self, memory: 'Memory'):
-        if(self.args[0].type is None):
-            exit_error('Argument 1 is not of type var', 99)
-
-        if(self.args[1].type == 'var'):
-            val = memory.getvalue(self.args[0].frame, self.args[0].name)
-        if(self.args[1].type in symb):
-            memory.setvalue(self.args[1].frame, self.args[1].name, val)
-        else:
-            exit_error(
-                f'"{self.opcode}" argument 2 is not of type "{symb}"', 32)
-
-    def _getvalue(self, memory: 'Memory', arg_index: 'int'):
-        if(self.args[arg_index].type == 'var'):
-            var = memory.getvalue(self.args[1].frame, self.args[1].name)
-        else:
-            var = self.args[arg_index].content
-        return var
-
+        val = self.getval(memory, 1)
+        self.setval(memory, 0, val)
+    ############################################################################
     def _case_createframe_check_args(self):
         count = len(self.args)
         if(count != 0):
@@ -154,19 +162,19 @@ class Instruction(object):
 
     def _case_createframe_run(self, memory: 'Memory'):
         memory.createframe()
-
+    ############################################################################
     def _case_pushframe_check_args(self):
         self._check_number_args(0)
 
     def _case_pushframe_run(self, memory: 'Memory'):
         memory.pushframe()
-
+    ############################################################################
     def _case_popframe_check_args(self):
         self._check_number_args(0)
 
     def _case_popframe_run(self, memory: 'Memory'):
         memory.popframe()
-
+    ############################################################################
     def _case_defvar_check_args(self):
         self._check_number_args(1)
         if self.args[0].type != 'var':
@@ -174,7 +182,7 @@ class Instruction(object):
 
     def _case_defvar_run(self, memory: 'Memory'):
         memory.defvar(self.args[0].frame, self.args[0].name)
-
+    ############################################################################
     def _case_call_check_args(self):
         self._check_number_args(1)
         if(self.args[0].type != 'label'):
@@ -183,14 +191,14 @@ class Instruction(object):
     def _case_call_run(self, memory: 'Memory'):
         memory.stack.push(str(memory.index))
         memory.jump(self.args[0].content)
-
+    ############################################################################
     def _case_return_check_args(self):
         self._check_number_args(0)
 
     def _case_return_run(self, memory: 'Memory'):
         index = memory.stack.pop()
         memory.jump(index)
-
+    ############################################################################
     def _case_pushs_check_args(self):
         self._check_number_args(1)
         if(self.args[0].type not in symb):
@@ -198,12 +206,9 @@ class Instruction(object):
                 f'"{self.opcode}" argument 1 is not type of"{symb}"', 32)
 
     def _case_pushs_run(self, memory: 'Memory'):
-        if(self.args[0].type == 'var'):
-            val = self._getvalue(memory, 0)
-            memory.stack.push(val)
-        elif(self.args[0].type in symb):
-            memory.stack.push(self.args[0].content)
-
+        val = self.getval(memory, 0)
+        memory.stack.push(val)
+    ############################################################################
     def _case_pops_check_args(self):
         self._check_number_args(1)
         if(self.args[0].type != 'var'):
@@ -211,8 +216,8 @@ class Instruction(object):
 
     def _case_pops_run(self, memory: 'Memory'):
         val = memory.stack.pop()
-        memory.setvalue(self.args[0].frame, self.args[0].name, val)
-
+        self.setval(memory, 0, val)
+    ############################################################################
     def _case_add_check_args(self):
         self._check_number_args(3)
         if(self.args[0].type != 'var'):
@@ -225,11 +230,10 @@ class Instruction(object):
                 f'"{self.opcode}" argument 2 is not type of "{symb}', 32)
 
     def _case_add_run(self, memory: 'Memory'):
-        var1 = int(self._getvalue(memory, 2))
-        var2 = int(self._getvalue(memory, 3))
-        memory.setvalue(self.args[0].frame,
-                        self.args[0].name, str(var1 + var2))
-
+        var1 = int(self.getval(memory, 2))
+        var2 = int(self.getval(memory, 3))
+        self.setval(memory, 0, str(var1 + var2))
+    ############################################################################
     def _case_sub_check_args(self):
         self._check_number_args(3)
         if(self.args[0].type != 'var'):
@@ -242,11 +246,10 @@ class Instruction(object):
                 f'"{self.opcode}" argument 2 is not type of "{symb}', 32)
 
     def _case_sub_run(self, memory: 'Memory'):
-        var1 = int(self._getvalue(memory, 2))
-        var2 = int(self._getvalue(memory, 3))
-        memory.setvalue(self.args[0].frame,
-                        self.args[0].name, str(var1 - var2))
-
+        var1 = int(self.getval(memory, 2))
+        var2 = int(self.getval(memory, 3))
+        self.setval(memory, 0, str(var1 - var2))
+    ############################################################################
     def _case_mul_check_args(self):
         self._check_number_args(3)
         if(self.args[0].type != 'var'):
@@ -259,11 +262,10 @@ class Instruction(object):
                 f'"{self.opcode}" argument 2 is not type of "{symb}', 32)
 
     def _case_mul_run(self, memory: 'Memory'):
-        var1 = int(self._getvalue(memory, 2))
-        var2 = int(self._getvalue(memory, 3))
-        memory.setvalue(self.args[0].frame,
-                        self.args[0].name, str(var1 * var2))
-
+        var1 = int(self.getval(memory, 2))
+        var2 = int(self.getval(memory, 3))
+        self.setval(memory, 0, str(var1 * var2))
+    ############################################################################
     def _case_idiv_check_args(self):
         self._check_number_args(3)
         if(self.args[0].type != 'var'):
@@ -276,11 +278,10 @@ class Instruction(object):
                 f'"{self.opcode}" argument 2 is not type of "{symb}', 32)
 
     def _case_idiv_run(self, memory: 'Memory'):
-        var1 = int(self._getvalue(memory, 2))
-        var2 = int(self._getvalue(memory, 3))
-        memory.setvalue(self.args[0].frame,
-                        self.args[0].name, str(var1 / var2))
-
+        var1 = int(self.getval(memory, 2))
+        var2 = int(self.getval(memory, 3))
+        self.setval(memory, 0, str(var1 / var2))
+    ############################################################################
     def _case_read_check_args(self):
         self._check_number_args(2)
         if(self.args[0].type != 'var'):
@@ -290,9 +291,21 @@ class Instruction(object):
 
     def _case_read_run(self, memory: 'Memory'):
         line = memory.getline()
-        #@todo line format check
-        memory.setvalue(self.args[0].frame, self.args[0].name, line)
+        if(self.args[1].content == 'int'):
+            val = str(int(line))
+        elif(self.args[1].content == 'string'):
+            val = line
+        elif(self.args[1].content == 'bool'):
+            val = str(bool(line))
+        elif(self.args[1].content == 'nil'):
+            val = 'nil'
+        else:
+            exit_error(
+                f'"{self.args[1].content}" is not type of {self.args[1].type}', 32)
 
+        # @todo line format check for string
+        self.setval(memory, 0, val)
+    ############################################################################
     def _case_write_check_args(self):
         self._check_number_args(1)
         if(self.args[0].type not in symb):
@@ -302,4 +315,4 @@ class Instruction(object):
         if(self.args[0].type == 'nil'):
             print('nil@nil')
         else:
-            print(self._getvalue(memory, 0), end='')
+            print(self.getval(memory, 0), end='')
