@@ -227,6 +227,8 @@ class Instruction(object):
         type,val = memory.stack.pop()
         self.setval(memory, 0, type, val)
     ############################################################################
+
+    ############################################################################
     # checks the types of the arguments for aritmetic instructions
     def _check_arithmetic_args(self):
         self._check_number_args(3)
@@ -234,7 +236,6 @@ class Instruction(object):
         self._check_types(1, numeric_types)
         self._check_types(2, numeric_types)
     ############################################################################
-
     def _case_add_check_args(self):
         self._check_arithmetic_args()
 
@@ -259,7 +260,6 @@ class Instruction(object):
             exit_error(f'"{self.opcode}" argument 3 is not type of int', 32)
         self.setval(memory, 0, 'int' ,str(int(var1) - int(var2)))
     ############################################################################
-
     def _case_mul_check_args(self):
         self._check_arithmetic_args()
 
@@ -272,7 +272,6 @@ class Instruction(object):
             exit_error(f'"{self.opcode}" argument 3 is not type of int', 32)
         self.setval(memory, 0, 'int' ,str(int(var1) * int(var2)))
     ############################################################################
-
     def _case_idiv_check_args(self):
         self._check_arithmetic_args()
 
@@ -286,6 +285,8 @@ class Instruction(object):
         if(int(var2) == 0):
             exit_error('Division by zero', 32)
         self.setval(memory, 0, 'int' ,str(int(var1) / int(var2)))
+    ############################################################################
+
     ############################################################################
     # checks the types of the arguments for comparison instructions
     def _check_compare_args(self):
@@ -307,7 +308,6 @@ class Instruction(object):
         else:
             self.setval(memory, 0, 'bool','false')
     ############################################################################
-
     def _case_gt_check_args(self):
         self._check_compare_args()
 
@@ -321,7 +321,6 @@ class Instruction(object):
         else:
             self.setval(memory, 0, 'bool', 'false')
     ############################################################################
-
     def _case_eq_check_args(self):
         self._check_compare_args()
 
@@ -334,6 +333,8 @@ class Instruction(object):
             self.setval(memory, 0, 'bool', 'true')
         else:
             self.setval(memory, 0, 'bool', 'false')
+    ############################################################################
+
     ############################################################################
     # checks the types of the arguments for boolean instructions
     def _check_bool_args(self):
@@ -357,7 +358,6 @@ class Instruction(object):
         else:
             self.setval(memory, 0, 'bool', 'false')
     ############################################################################
-
     def _case_or_check_args(self):
         self._check_bool_args()
 
@@ -373,7 +373,6 @@ class Instruction(object):
         else:
             self.setval(memory, 0, 'bool', 'false')
     ############################################################################
-
     def _case_not_check_args(self):
         self._check_number_args(2)
         self._check_type(0, 'var')
@@ -387,6 +386,8 @@ class Instruction(object):
             self.setval(memory, 0, 'bool', 'false')
         else:
             self.setval(memory, 0, 'bool', 'true')
+    ############################################################################
+
     ############################################################################
     def _case_read_check_args(self):
         self._check_number_args(2)

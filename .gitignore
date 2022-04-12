@@ -1,4 +1,5 @@
-src/Testy
+*/Testy
+*/__pycache__
 *.in
 *.out
 *.src
@@ -7,4 +8,5 @@ src/Testy
 *.p_run_out
 *.i_run_out
 *.pyc
-xkocic02.zip
+*.tmp
+*.zip
