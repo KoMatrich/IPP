@@ -4,7 +4,7 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "src/interpret.py",
             "args": [
                 "--source=./Testy/interpret-only/valid/read.src",
                 "--input=./Testy/interpret-only/valid/read.in"

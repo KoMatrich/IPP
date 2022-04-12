@@ -6,4 +6,5 @@ src/Testy
 *.i_run_rc
 *.p_run_out
 *.i_run_out
+*.pyc
 xkocic02.zip
