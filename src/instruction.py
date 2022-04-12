@@ -389,6 +389,45 @@ class Instruction(object):
     ############################################################################
 
     ############################################################################
+    def _case_int2char_check_args(self):
+        self._check_number_args(2)
+        self._check_type(0, 'var')
+        self._check_types(1, symb)
+
+    def _case_int2char_run(self, memory: 'Memory'):
+        type, var = self.getvar(memory, 1)
+        if(type != 'int'):
+            exit_error(f'"{self.opcode}" argument 1 is not type of int', 32)
+        try:
+            out = chr(int(var))
+        except(ValueError):
+            exit_error(
+                f'"{self.opcode}" argument 1 cant be converted to char', 58)
+        self.setval(memory, 0, 'char', out)
+
+    def _case_str2int_check_args(self):
+        self._check_number_args(3)
+        self._check_type(0, 'var')
+        self._check_types(1, symb)
+        self._check_types(2, symb)
+
+    def _case_str2int_run(self, memory: 'Memory'):
+        type1, var1 = self.getvar(memory, 1)
+        type2, var2 = self.getvar(memory, 2)
+        if(type1 != 'str'):
+            exit_error(f'"{self.opcode}" argument 1 is not type of str', 32)
+        if(type2 != 'int'):
+            exit_error(f'"{self.opcode}" argument 2 is not type of int', 32)
+
+        try:
+            out = var1[int(var2)]
+        except(IndexError):
+            exit_error('"str2int" argument 2 is out of range', 58)
+
+        self.setval(memory, 0, 'char', out)
+    ############################################################################
+
+    ############################################################################
     def _case_read_check_args(self):
         self._check_number_args(2)
         if(self.args[0].type != 'var'):
