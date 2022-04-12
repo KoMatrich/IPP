@@ -1,5 +1,5 @@
-*/Testy
-*/__pycache__
+*Testy
+*__pycache__
 *.in
 *.out
 *.src
