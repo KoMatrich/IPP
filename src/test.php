@@ -17,7 +17,11 @@ function error(int $code, string $target)
             $msg = "failed to write to file \"$target\"";
             break;
         case 41:
-            $msg = "\"$target\" File or directory not found";
+            if($target == "") {
+                $msg = "No input files has been specified, use -h for help";
+            } else {
+                $msg = "\"$target\" is not existing file or can't be read";
+            }
             break;
         case 99:
             $msg = "Internal";
@@ -93,21 +97,29 @@ foreach($argv as $arg){
         }
 }
 
-function getarg($index,$argc,$argv,$value){
-    if($index >= $argc) {
-        error(10, $value);
+function getarg($index,$varg,$value){
+    if(isset($varg[$index])){
+        return $varg[$index];
+    } else {
+        error(10,"$value");
     }
-    return $argv[$index];
 }
 
-$index = 1;
-for(; $index < $argc; $index++) {
+for($i = 0; $i < $argc; $i++){
+    $splited = explode("=", $argv[$i],2);
+    $argv[$i] = $splited[0];
+    if(count($splited) == 2){
+        $varg[$i] = $splited[1];
+    }
+}
+
+for($index = 1; $index < $argc; $index++) {
     $value = $argv[$index];
     if($value[0] == '-') {
     switch($value){
         case "-d":
         case "--directory":
-                $dir = getarg(++$index, $argc, $argv, $value);
+                $dir = getarg($index,$varg,$value);
             break;
         case "-r":
         case "--recursive":
@@ -115,11 +127,11 @@ for(; $index < $argc; $index++) {
             break;
         case "-ps":
         case "--parse-script":
-                $parser = getarg(++$index, $argc, $argv, $value);
+                $parser = getarg($index,$varg,$value);
             break;
         case "-is":
         case "--int-script":
-                $int_script = getarg(++$index, $argc, $argv, $value);
+                $interpreter = getarg($index,$varg,$value);
             break;
         case "-po":
         case "--parser-only":
@@ -131,7 +143,7 @@ for(; $index < $argc; $index++) {
             break;
         case "-jp":
         case "--jexampath":
-                $jexampath = getarg(++$index, $argc, $argv, $value);
+                $jexampath = getarg($index,$varg,$value);
             break;
         case "-nc":
         case "--no-clean":
@@ -150,6 +162,7 @@ if($parser_only && $int_only)
 
 function open($dir, $recursive)
 {
+    file_exists($dir) or error(41, $dir);
     $content = scandir($dir, 1);
     if (!$content)
         error(11, $dir);
@@ -184,12 +197,10 @@ function open($dir, $recursive)
 }
 
 if (!$int_only)
-    if (file_exists($parser) == false)
-        error(11, $parser);
+    file_exists($parser) or error(11, $parser);
 
 if (!$parser_only)
-    if (file_exists($interpreter) == false)
-        error(11, $interpreter);
+    file_exists($interpreter) or error(11, $interpreter);
 
 $files = open($dir, $recursive);
 $count = count($files);
@@ -242,12 +253,22 @@ function get_paths($test, &$in, &$out, &$rc, &$src)
     }
 }
 
+function write_tmp_file($file_name, $content, $tmp_files){
+    if(file_exists($file_name)){
+        error(12, $file_name);
+    }
+    $rc_file = fopen($file_name, "w") or error(12, $file_name);
+    fwrite($rc_file, $content);
+    fclose($rc_file);
+}
+
 $p_rc = ".p_run_rc";
 $p_out = ".p_run_out";
 $i_rc = ".i_run_rc";
 $i_out = ".i_run_out";
 
 $correct = $files;
+$tmp_files = array();
 
 if (!$int_only) {//run paser
     $index = 0;
@@ -258,13 +279,10 @@ if (!$int_only) {//run paser
         get_paths($test, $in, $out, $rc, $src);
 
         exec("cat \"$test.src\" | php $parser $in 2>&1", $run_out, $run_rc);
-        $rc_file = fopen($test . $p_rc, "w") or error(12, $test . $p_rc);
-        fwrite($rc_file, $run_rc);
-        fclose($rc_file);
-
-        $out_file = fopen($test . $p_out, "w") or error(12, $test . $p_out);
-        fwrite($out_file, implode("\n", $run_out));
-        fclose($out_file);
+        $file_name = $test . $p_out;
+        write_tmp_file($file_name, implode("\n", $run_out), $tmp_files);
+        $file_name = $test . $p_rc;
+        write_tmp_file($file_name, $run_rc, $tmp_files);
 
         if ($parser_only) {
             if ($rc != $run_rc) {
@@ -304,13 +322,10 @@ if (!$parser_only) {//run interpreter
         else
             exec("cat \"$test.$p_out\" | php $interpreter $in 2>&1", $run_out, $run_rc);
 
-        $rc_file = fopen($test . $i_rc, "w") or error(12, $test . $i_rc);
-        fwrite($rc_file, $run_rc);
-        fclose($rc_file);
-
-        $out_file = fopen($test . $i_out, "w") or error(12, $test . $i_out);
-        fwrite($out_file, implode("\n", $run_out));
-        fclose($out_file);
+        $file_name = $test . $i_out;
+        write_tmp_file($file_name, implode("\n", $run_out), $tmp_files);
+        $file_name = $test . $i_orc;
+        write_tmp_file($file_name, $run_rc, $i_rc);
 
         if ($rc != $run_rc) {
             Printf("[Interpeter tests]: %-45s %s %d != %d\n", $test, "Test retuned wrong return code", $run_rc, $rc);
@@ -348,5 +363,6 @@ if (!$no_clean) {//run clean-up
     }
 }
 
+print("all tests done\n");
 
 exit (0);

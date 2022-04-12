@@ -15,15 +15,15 @@
         {
             "name": "Launch currently open script",
             "args": [
-                "-d",
-                "./Testy/parse-only",
+                "-d=./Testy/interpret-only",
                 "-r",
-                "-po"
+                "--int-only",
+                "--int-script=${workspaceFolder}/src/interpret.py"
             ],
             "type": "php",
             "request": "launch",
-            "program": "${file}",
-            "cwd": "${fileDirname}",
+            "program": "${workspaceFolder}/src/test.php",
+            "cwd": "${workspaceFolder}/",
             "port": 0,
             "runtimeArgs": [
                 "-dxdebug.start_with_request=yes"
