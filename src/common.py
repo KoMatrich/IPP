@@ -26,6 +26,7 @@ def isInt(s: str):
 numeric_types = ['int']
 var_types = numeric_types + ['bool', 'string', 'nil']
 
+symb_bool = ['bool'] + ['var']
 symb_num = numeric_types + ['var']
 symb = var_types + ['var']
 

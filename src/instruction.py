@@ -2,6 +2,7 @@ from common import *
 import xml.etree.ElementTree as ET
 from vir_machine import *
 
+# This file contains the code for the interpretation of the instructions
 
 class Argument:
     def __init__(self, arg: 'ET.Element'):
@@ -338,12 +339,54 @@ class Instruction(object):
     def _check_bool_args(self):
         self._check_number_args(3)
         self._check_type(0, 'var')
-        self._check_types(1, symb)
-        self._check_types(2, symb)
+        self._check_types(1, symb_bool)
+        self._check_types(2, symb_bool)
     ############################################################################
     def _case_and_check_args(self):
         self._check_bool_args()
 
+    def _case_and_run(self, memory: 'Memory'):
+        type1, var1 = self.getvar(memory, 1)
+        type2, var2 = self.getvar(memory, 2)
+        if(type1 != 'bool'):
+            exit_error(f'"{self.opcode}" argument 1 is not type of bool', 32)
+        if(type2 != 'bool'):
+            exit_error(f'"{self.opcode}" argument 2 is not type of bool', 32)
+        if(var1 == 'true' and var2 == 'true'):
+            self.setval(memory, 0, 'bool', 'true')
+        else:
+            self.setval(memory, 0, 'bool', 'false')
+    ############################################################################
+
+    def _case_or_check_args(self):
+        self._check_bool_args()
+
+    def _case_or_run(self, memory: 'Memory'):
+        type1, var1 = self.getvar(memory, 1)
+        type2, var2 = self.getvar(memory, 2)
+        if(type1 != 'bool'):
+            exit_error(f'"{self.opcode}" argument 1 is not type of bool', 32)
+        if(type2 != 'bool'):
+            exit_error(f'"{self.opcode}" argument 2 is not type of bool', 32)
+        if(var1 == 'true' or var2 == 'true'):
+            self.setval(memory, 0, 'bool', 'true')
+        else:
+            self.setval(memory, 0, 'bool', 'false')
+    ############################################################################
+
+    def _case_not_check_args(self):
+        self._check_number_args(2)
+        self._check_type(0, 'var')
+        self._check_types(1, symb_bool)
+
+    def _case_not_run(self, memory: 'Memory'):
+        type, var = self.getvar(memory, 1)
+        if(type != 'bool'):
+            exit_error(f'"{self.opcode}" argument 1 is not type of bool', 32)
+        if(var == 'true'):
+            self.setval(memory, 0, 'bool', 'false')
+        else:
+            self.setval(memory, 0, 'bool', 'true')
     ############################################################################
     def _case_read_check_args(self):
         self._check_number_args(2)
