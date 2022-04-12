@@ -10,8 +10,8 @@ class Variable:
 
     def __str__(self):
         if(self._value is None):
-            return f'{self._name} Not defined'
-        return f'{self._type} {self._name}="{self._value}"'
+            return f'"{self._name}" is not defined'
+        return f'{self._type} "{self._name}"="{self._value}"'
 
     def setvalue(self, type: 'str', value: 'str'):
         self._value = value

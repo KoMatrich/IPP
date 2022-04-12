@@ -96,7 +96,7 @@ def run(xml_tree: 'ET.Element', input: 'TextIO'):
 
     memory.index = 0
     while(memory.index < codelen):
-        print(f'Memory:\n{memory}')
+        # print(f'Memory:\n{memory}')  # for debugging
         if(instructions[memory.index].opcode != 'label'):
             instructions[memory.index].run(memory)
         memory.inccounter()

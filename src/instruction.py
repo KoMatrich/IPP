@@ -108,7 +108,13 @@ class Instruction(object):
         if(self.args[arg_index].type == 'var'):
             return memory.isdefined(self.args[arg_index].frame, self.args[arg_index].name)
         else:
-            exit_error('cannot check if non-variable argument is defined', 32)
+            return False
+
+    def isconst(self, arg_index: 'int') -> 'bool':
+        if(self.args[arg_index].type != 'var'):
+            return True
+        else:
+            return False
 
     # sets the arguments of the instruction and sorts them
     def _set_args(self, instruction: ET.Element):
@@ -581,6 +587,14 @@ class Instruction(object):
         if self.isdefined(memory, 1):
             type, _ = self.getvar(memory, 0)
             self.setval(memory, 0, 'string', type)
+        elif self.isconst(1):
+            type = self.args[1].type
+            if(type in var_types):
+                self.setval(memory, 0, 'string', type)
+            else:
+                exit_error('"type" argument 1 is not type of var', 32)
+        else:
+            self.setval(memory, 0, 'string', '')
     ############################################################################
 
     ############################################################################
