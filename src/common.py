@@ -23,18 +23,6 @@ def isInt(s: str):
     except Exception as e:
         exit_error(f'{e}', 99)
 
-
-def getType(s: str) -> str:
-    if isInt(s):
-        return 'int'
-    elif s == 'true' or s == 'false':
-        return 'bool'
-    elif s in ['', 'nil']:
-        return 'nil'
-    else:
-        return 'str'
-
-
 numeric_types = ['int']
 var_types = numeric_types + ['bool', 'string', 'nil']
 

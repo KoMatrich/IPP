@@ -6,14 +6,16 @@ class Variable:
     def __init__(self, name: str):
         self._name = name
         self._value = None
+        self._type = None
 
     def __str__(self):
         if(self._value is None):
             return f'{self._name} Not defined'
-        return f'{self._name}="{self._value}"'
+        return f'{self._type} {self._name}="{self._value}"'
 
-    def setvalue(self, value: 'str'):
+    def setvalue(self, type: 'str', value: 'str'):
         self._value = value
+        self._type = type
 
     def getname(self) -> 'str':
         return self._name
@@ -22,6 +24,11 @@ class Variable:
         if(self._value is None):
             exit_error('Using variable that is not defined', 52)
         return self._value
+
+    def gettype(self) -> 'str':
+        if(self._type is None):
+            exit_error('Using variable that is not defined', 52)
+        return self._type
 
 
 class Frame:
@@ -98,7 +105,9 @@ class Memory:
         self.gf: 'Frame' = Frame()
         self.tf: 'Frame|None' = None
         self.lf: 'Stack[Frame]' = Stack()
-        self.stack: 'Stack[str]' = Stack()
+
+        self.return_stack: 'Stack[int]' = Stack()
+        self.stack: 'Stack[tuple[str,str]]' = Stack()
 
         self.labels: 'list[clabel]' = []
 
@@ -134,7 +143,7 @@ class Memory:
             exit_error(f'Invalid frame "{frame}"', 99)
         pass
 
-    def getvalue(self, frame: 'str', name: 'str') -> 'str':
+    def getvar(self, frame: 'str', name: 'str') -> 'tuple[str,str]':
         if(frame == 'GF'):
             var = self.gf.getvar(name)
         elif(frame == 'TF'):
@@ -145,9 +154,9 @@ class Memory:
             var = self.lf.top().getvar(name)
         else:
             exit_error(f'Invalid frame "{frame}"', 52)
-        return var.getvalue()
+        return var.gettype(),var.getvalue()
 
-    def setvalue(self, frame: 'str', name: 'str', value: 'str'):
+    def setvalue(self, frame: 'str', name: 'str', type: 'str',value: 'str'):
         if(frame == 'GF'):
             var = self.gf.getvar(name)
         elif(frame == 'TF'):
@@ -158,7 +167,7 @@ class Memory:
             var = self.lf.top().getvar(name)
         else:
             exit_error(f'Invalid frame "{frame}"', 52)
-        var.setvalue(value)
+        var.setvalue(value,type)
 
     def createframe(self):
         self.tf = Frame()
