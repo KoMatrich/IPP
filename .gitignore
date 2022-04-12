@@ -1,5 +1,6 @@
 *Testy
 *__pycache__
+/xplag
 *.in
 *.out
 *.src
