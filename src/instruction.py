@@ -217,14 +217,14 @@ class Instruction(object):
         self._check_types(0, symb)
 
     def _case_pushs_run(self, memory: 'Memory'):
-        memory.stack.push(self.getvar(memory, 0))
+        memory.data_stack.push(self.getvar(memory, 0))
     ############################################################################
     def _case_pops_check_args(self):
         self._check_number_args(1)
         self._check_type(0, 'var')
 
     def _case_pops_run(self, memory: 'Memory'):
-        type,val = memory.stack.pop()
+        type,val = memory.data_stack.pop()
         self.setval(memory, 0, type, val)
     ############################################################################
 
@@ -397,7 +397,7 @@ class Instruction(object):
             exit_error(f'"{self.opcode}" argument 2 is not type of type', 32)
 
     def _case_read_run(self, memory: 'Memory'):
-        line = memory.getline()
+        line = memory.getinput()
         type = self.args[1].content
         if(type == 'int'):
             val = str(int(line))

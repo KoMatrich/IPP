@@ -100,17 +100,22 @@ class clabel:
 
 class Memory:
     def __init__(self, input: 'TextIO'):
-        self.index: 'int' = 0
-
+        # Memory frames
         self.gf: 'Frame' = Frame()
         self.tf: 'Frame|None' = None
         self.lf: 'Stack[Frame]' = Stack()
 
+        # Stacks
         self.return_stack: 'Stack[int]' = Stack()
-        self.stack: 'Stack[tuple[str,str]]' = Stack()
+        self.data_stack: 'Stack[tuple[str,str]]' = Stack()
 
+        # Labels
         self.labels: 'list[clabel]' = []
 
+        # Index of the next instruction
+        self.index: 'int' = 0
+
+        # Input file/stream
         self._input: 'TextIO' = input
 
     def __str__(self) -> str:
@@ -121,14 +126,9 @@ class Memory:
         else:
             lines += f'TF:\n{self.tf}\n'
         lines += f'LF:\n{self.lf}\n'
-        lines += f'Stack:\n{self.stack}\n'
+        lines += f'Stack:\n{self.data_stack}\n'
         lines += f'Labels:\n{self.labels}\n'
         return lines
-
-    def getline(self) -> 'str':
-        line = self._input.readline()
-        line = line.rstrip()
-        return line
 
     def defvar(self, frame: 'str', name: 'str'):
         if(frame == 'GF'):
@@ -154,9 +154,9 @@ class Memory:
             var = self.lf.top().getvar(name)
         else:
             exit_error(f'Invalid frame "{frame}"', 52)
-        return var.gettype(),var.getvalue()
+        return var.gettype(), var.getvalue()
 
-    def setvalue(self, frame: 'str', name: 'str', type: 'str',value: 'str'):
+    def setvalue(self, frame: 'str', name: 'str', type: 'str', value: 'str'):
         if(frame == 'GF'):
             var = self.gf.getvar(name)
         elif(frame == 'TF'):
@@ -167,7 +167,7 @@ class Memory:
             var = self.lf.top().getvar(name)
         else:
             exit_error(f'Invalid frame "{frame}"', 52)
-        var.setvalue(value,type)
+        var.setvalue(value, type)
 
     def createframe(self):
         self.tf = Frame()
@@ -180,10 +180,11 @@ class Memory:
     def popframe(self):
         self.tf = self.lf.pop()
 
+
     def inccounter(self):
         self.index += 1
 
-    def _setlabel(self, name: str, pos: int):
+    def setlabel(self, name: str, pos: int):
         if(name in self.labels):
             exit_error(f'Label "{name}" was already defined', 52)
         self.labels.append(clabel(name, pos))
@@ -196,6 +197,11 @@ class Memory:
 
     def jump(self, label: 'str'):
         self.index = self._getlabel(label).getpos()
+
+    def getinput(self) -> 'str':
+        line = self._input.readline()
+        line = line.rstrip()
+        return line
 
 
 if __name__ == "__main__":
