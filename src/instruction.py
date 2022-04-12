@@ -4,7 +4,6 @@ from vir_machine import *
 
 # This file contains the code for the interpretation of the instructions
 
-
 class Argument:
     def __init__(self, arg: 'ET.Element'):
         self.type = arg.get('type')
@@ -30,7 +29,7 @@ class Argument:
             self.content = arg.text
 
             if(self.type == 'int'):
-                if(not isInt(self.content)):
+                if isInt(self.content):
                     self.content = self.content
                 else:
                     exit_error(
@@ -81,8 +80,6 @@ class Instruction(object):
         if(method is None):
             exit_error(f'{self.opcode} is not valid instruction', 32)
         method(memory)
-        memory.inccounter()
-        return memory
 
     # gets the value of an argument from memory
     # or from the argument itself

@@ -74,6 +74,14 @@ def get_instructions(xml_tree: 'ET.Element'):
     return instuctions
 
 
+def addlabels(memory: 'Memory', instructions: 'list[Instruction]'):
+    memory.index = 0
+    for inst in instructions:
+        if inst.opcode == 'label':
+            inst.run(memory)
+        memory.inccounter()
+
+
 def run(xml_tree: 'ET.Element', input: 'TextIO'):
     if(xml_tree.tag != 'program'):
         exit_error('root tag is not program', 32)
@@ -81,11 +89,17 @@ def run(xml_tree: 'ET.Element', input: 'TextIO'):
         exit_error('language is not IPPcode22', 32)
 
     instructions = get_instructions(xml_tree)
+    codelen = len(instructions)
     memory = Memory(input)
 
-    while(memory.index < len(instructions)):
-        # print(f'Memory:\n{memory}')
-        instructions[memory.index].run(memory)
+    addlabels(memory, instructions)
+
+    memory.index = 0
+    while(memory.index < codelen):
+        print(f'Memory:\n{memory}')
+        if(instructions[memory.index].opcode != 'label'):
+            instructions[memory.index].run(memory)
+        memory.inccounter()
 
 
 def main(argv: 'list[str]'):

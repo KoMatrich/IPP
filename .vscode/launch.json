@@ -1,4 +1,11 @@
 {
+    "inputs": [
+    {
+        "id": "tests",
+        "description": "Select client or server",
+        "type": "promptString",
+    }
+    ],
     "configurations": [
         {
             "name": "Python: Current File",
@@ -6,8 +13,8 @@
             "request": "launch",
             "program": "src/interpret.py",
             "args": [
-                "--source=./Testy/interpret-only/valid/read.src",
-                "--input=./Testy/interpret-only/valid/read.in"
+                "--source=./Testy/interpret-only/valid/${input:tests}.src",
+                "--input=./Testy/interpret-only/valid/${input:tests}.in"
             ],
             "console": "integratedTerminal",
             "justMyCode": true

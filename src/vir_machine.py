@@ -64,6 +64,7 @@ class Frame:
                 return var.defined()
         return False
 
+
 T = TypeVar('T')
 
 
@@ -100,7 +101,12 @@ class clabel:
         self._pos = pos
 
     def __eq__(self, __o: object) -> bool:
-        return __o.__getattribute__('name') == self._name
+        if(self._name == __o):
+            return True
+        return False
+
+    def __repr__(self):
+        return str(self)
 
     def __str__(self) -> str:
         return f'{self._name}:{self._pos}'
@@ -202,7 +208,6 @@ class Memory:
     def popframe(self):
         self.tf = self.lf.pop()
 
-
     def inccounter(self):
         self.index += 1
 
@@ -212,8 +217,9 @@ class Memory:
         self.labels.append(clabel(name, pos))
 
     def _getlabel(self, name: str) -> 'clabel':
-        if(name in self.labels):
-            return self.labels[name]
+        for label in self.labels:
+            if(label == name):
+                return label
         else:
             exit_error(f'Label "{name}" was not defined', 52)
 
@@ -224,7 +230,6 @@ class Memory:
         line = self._input.readline()
         line = line.rstrip()
         return line
-
 
 if __name__ == "__main__":
     exit_error('This file is not meant to be run directly', 1)
