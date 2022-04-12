@@ -46,10 +46,17 @@ class Argument:
 
             elif(self.type == 'type'):
                 self.content = self.content.lower()
+                if(self.content not in var_types):
+                    exit_error(
+                        f'Argument "{arg.tag}" type has invalid value "{self.content}"', 32)
 
             elif(self.type == 'label'):
                 if(self.content == ''):
                     exit_error(f'Label "{arg.tag}" has no name', 32)
+            elif(self.type == 'nil'):
+                if(self.content != 'nil'):
+                    exit_error(
+                        f'Argument "{arg.tag}" type nil can have only value of nil', 32)
             else:
                 exit_error(
                     f'Argument "{arg.tag}" has invalid type "{self.type}"', 32)
@@ -140,6 +147,17 @@ class Instruction(object):
             exit_error(
                 f'{self.opcode} has {len(self.args)} arguments, but {arg_count} are required', 32)
 
+    # checks the types of the arguments for aritmetic instructions
+    def _check_arithmetic_args(self):
+        self._check_number_args(3)
+        if(self.args[0].type != 'var'):
+            exit_error(f'"{self.opcode}" argument 1 is not type of var', 32)
+        if(self.args[1].type not in symb_num):
+            exit_error(
+                f'"{self.opcode}" argument 2 is not type of "{symb_num}"', 32)
+        if(self.args[2].type not in symb_num):
+            exit_error(
+                f'"{self.opcode}" argument 2 is not type of "{symb_num}', 32)
     ############################################################################
     # Instructions implementations
     ############################################################################
@@ -219,15 +237,7 @@ class Instruction(object):
         self.setval(memory, 0, val)
     ############################################################################
     def _case_add_check_args(self):
-        self._check_number_args(3)
-        if(self.args[0].type != 'var'):
-            exit_error(f'"{self.opcode}" argument 1 is not type of var', 32)
-        if(self.args[1].type not in symb):
-            exit_error(
-                f'"{self.opcode}" argument 2 is not type of "{symb}"', 32)
-        if(self.args[2].type not in symb):
-            exit_error(
-                f'"{self.opcode}" argument 2 is not type of "{symb}', 32)
+        self._check_arithmetic_args()
 
     def _case_add_run(self, memory: 'Memory'):
         var1 = int(self.getval(memory, 2))
@@ -235,38 +245,33 @@ class Instruction(object):
         self.setval(memory, 0, str(var1 + var2))
     ############################################################################
     def _case_sub_check_args(self):
-        self._check_number_args(3)
-        if(self.args[0].type != 'var'):
-            exit_error(f'"{self.opcode}" argument 1 is not type of var', 32)
-        if(self.args[1].type not in symb):
-            exit_error(
-                f'"{self.opcode}" argument 2 is not type of "{symb}"', 32)
-        if(self.args[2].type not in symb):
-            exit_error(
-                f'"{self.opcode}" argument 2 is not type of "{symb}', 32)
+        self._check_arithmetic_args()
 
     def _case_sub_run(self, memory: 'Memory'):
         var1 = int(self.getval(memory, 2))
         var2 = int(self.getval(memory, 3))
         self.setval(memory, 0, str(var1 - var2))
     ############################################################################
+
     def _case_mul_check_args(self):
-        self._check_number_args(3)
-        if(self.args[0].type != 'var'):
-            exit_error(f'"{self.opcode}" argument 1 is not type of var', 32)
-        if(self.args[1].type not in symb):
-            exit_error(
-                f'"{self.opcode}" argument 2 is not type of "{symb}"', 32)
-        if(self.args[2].type not in symb):
-            exit_error(
-                f'"{self.opcode}" argument 2 is not type of "{symb}', 32)
+        self._check_arithmetic_args()
 
     def _case_mul_run(self, memory: 'Memory'):
         var1 = int(self.getval(memory, 2))
         var2 = int(self.getval(memory, 3))
         self.setval(memory, 0, str(var1 * var2))
     ############################################################################
+
     def _case_idiv_check_args(self):
+        self._check_arithmetic_args()
+
+    def _case_idiv_run(self, memory: 'Memory'):
+        var1 = int(self.getval(memory, 2))
+        var2 = int(self.getval(memory, 3))
+        self.setval(memory, 0, str(var1 / var2))
+    ############################################################################
+
+    def _case_lt_check_args(self):
         self._check_number_args(3)
         if(self.args[0].type != 'var'):
             exit_error(f'"{self.opcode}" argument 1 is not type of var', 32)
@@ -277,10 +282,48 @@ class Instruction(object):
             exit_error(
                 f'"{self.opcode}" argument 2 is not type of "{symb}', 32)
 
-    def _case_idiv_run(self, memory: 'Memory'):
-        var1 = int(self.getval(memory, 2))
-        var2 = int(self.getval(memory, 3))
-        self.setval(memory, 0, str(var1 / var2))
+    def _case_lt_run(self, memory: 'Memory'):
+        if(self.getval(memory, 2) < self.getval(memory, 3)):
+            self.setval(memory, 0, 'true')
+        else:
+            self.setval(memory, 0, 'false')
+    ############################################################################
+
+    def _case_gt_check_args(self):
+        self._check_number_args(3)
+        if(self.args[0].type != 'var'):
+            exit_error(f'"{self.opcode}" argument 1 is not type of var', 32)
+        if(self.args[1].type not in symb):
+            exit_error(
+                f'"{self.opcode}" argument 2 is not type of "{symb}"', 32)
+        if(self.args[2].type not in symb):
+            exit_error(
+                f'"{self.opcode}" argument 2 is not type of "{symb}', 32)
+
+    def _case_gt_run(self, memory: 'Memory'):
+        if(self.getval(memory, 2) > self.getval(memory, 3)):
+            self.setval(memory, 0, 'true')
+        else:
+            self.setval(memory, 0, 'false')
+    ############################################################################
+
+    def _case_eq_check_args(self):
+        self._check_number_args(3)
+        if(self.args[0].type != 'var'):
+            exit_error(f'"{self.opcode}" argument 1 is not type of var', 32)
+        if(self.args[1].type not in symb):
+            exit_error(
+                f'"{self.opcode}" argument 2 is not type of "{symb}"', 32)
+        if(self.args[2].type not in symb):
+            exit_error(
+                f'"{self.opcode}" argument 2 is not type of "{symb}', 32)
+
+    def _case_eq_run(self, memory: 'Memory'):
+        if(self.getval(memory, 2) == self.getval(memory, 3)):
+            self.setval(memory, 0, 'true')
+        else:
+            self.setval(memory, 0, 'false')
+    ############################################################################
     ############################################################################
     def _case_read_check_args(self):
         self._check_number_args(2)
@@ -296,7 +339,7 @@ class Instruction(object):
         elif(self.args[1].content == 'string'):
             val = line
         elif(self.args[1].content == 'bool'):
-            val = str(bool(line))
+            val = str(bool(line)).lower()
         elif(self.args[1].content == 'nil'):
             val = 'nil'
         else:
@@ -316,3 +359,4 @@ class Instruction(object):
             print('nil@nil')
         else:
             print(self.getval(memory, 0), end='')
+    ############################################################################

@@ -61,6 +61,7 @@ def get_instructions(xml_tree: 'ET.Element'):
     index_list: 'list[str]' = []
     instuctions: 'list[Instruction]' = []
 
+    # @todo keep just last index not list
     for inst in sorted_inst:
         order = inst.get('order')
         if(order is None):

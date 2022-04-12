@@ -117,7 +117,9 @@ class Memory:
         return lines
 
     def getline(self) -> 'str':
-        return self._input.readline()
+        line = self._input.readline()
+        line = line.rstrip()
+        return line
 
     def defvar(self, frame: 'str', name: 'str'):
         if(frame == 'GF'):
