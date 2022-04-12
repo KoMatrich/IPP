@@ -1,5 +1,12 @@
+import sys
+
+
+def eprint(*args: 'object', **kwargs: 'dict[str, object]'):
+    print(*args, file=sys.stderr, **kwargs)
+
+
 def exit_error(error_message: 'str', rc: 'int'):
-    print(f'interpret.py: {error_message}')
+    eprint(f'interpret.py: {error_message}')
     exit(rc)
 
 
@@ -23,10 +30,13 @@ def isInt(s: str):
     except Exception as e:
         exit_error(f'{e}', 99)
 
+
 numeric_types = ['int']
+
 var_types = numeric_types + ['bool', 'string', 'nil']
 
-symb_bool = ['bool'] + ['var']
+symb_string = ['string', 'var']
+symb_bool = ['bool', 'var']
 symb_num = numeric_types + ['var']
 symb = var_types + ['var']
 

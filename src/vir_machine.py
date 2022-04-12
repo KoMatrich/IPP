@@ -16,6 +16,7 @@ class Variable:
     def setvalue(self, type: 'str', value: 'str'):
         self._value = value
         self._type = type
+        # TODO nil keep nil
 
     def getname(self) -> 'str':
         return self._name
@@ -29,6 +30,11 @@ class Variable:
         if(self._type is None):
             exit_error('Using variable that is not defined', 52)
         return self._type
+
+    def defined(self) -> 'bool':
+        if(self._type is None):
+            return False
+        return True
 
 
 class Frame:
@@ -52,6 +58,11 @@ class Frame:
 
         exit_error(f'Variable "{name}" is not defined (F)', 52)
 
+    def isdefined(self, name: str) -> 'bool':
+        for var in self.variables:
+            if(name == var.getname()):
+                return var.defined()
+        return False
 
 T = TypeVar('T')
 
@@ -141,7 +152,18 @@ class Memory:
             self.lf.top().createvar(name)
         else:
             exit_error(f'Invalid frame "{frame}"', 99)
-        pass
+
+    def isdefined(self, frame: 'str', name: 'str') -> 'bool':
+        if(frame == 'GF'):
+            return self.gf.isdefined(name)
+        elif(frame == 'TF'):
+            if(self.tf is None):
+                exit_error(f'Frame "TF" is not defined', 55)
+            return self.tf.isdefined(name)
+        elif(frame == 'LF'):
+            return self.lf.top().isdefined(name)
+        else:
+            exit_error(f'Invalid frame "{frame}"', 99)
 
     def getvar(self, frame: 'str', name: 'str') -> 'tuple[str,str]':
         if(frame == 'GF'):
