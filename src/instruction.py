@@ -264,9 +264,9 @@ class Instruction(object):
         type1, var1 = self.getvar(memory, 1)
         type2, var2 = self.getvar(memory, 2)
         if(type1 != 'int'):
-            exit_error(f'"{self.opcode}" argument 2 is not type of int', 32)
+            exit_error(f'"{self.opcode}" argument 2 is not type of int', 53)
         if(type2 != 'int'):
-            exit_error(f'"{self.opcode}" argument 3 is not type of int', 32)
+            exit_error(f'"{self.opcode}" argument 3 is not type of int', 53)
         self.setval(memory, 0, 'int', str(int(var1) + int(var2)))
     ############################################################################
 
@@ -277,9 +277,9 @@ class Instruction(object):
         type1, var1 = self.getvar(memory, 1)
         type2, var2 = self.getvar(memory, 2)
         if(type1 != 'int'):
-            exit_error(f'"{self.opcode}" argument 2 is not type of int', 32)
+            exit_error(f'"{self.opcode}" argument 2 is not type of int', 53)
         if(type2 != 'int'):
-            exit_error(f'"{self.opcode}" argument 3 is not type of int', 32)
+            exit_error(f'"{self.opcode}" argument 3 is not type of int', 53)
         self.setval(memory, 0, 'int', str(int(var1) - int(var2)))
     ############################################################################
 
@@ -290,9 +290,9 @@ class Instruction(object):
         type1, var1 = self.getvar(memory, 1)
         type2, var2 = self.getvar(memory, 2)
         if(type1 != 'int'):
-            exit_error(f'"{self.opcode}" argument 2 is not type of int', 32)
+            exit_error(f'"{self.opcode}" argument 2 is not type of int', 53)
         if(type2 != 'int'):
-            exit_error(f'"{self.opcode}" argument 3 is not type of int', 32)
+            exit_error(f'"{self.opcode}" argument 3 is not type of int', 53)
         self.setval(memory, 0, 'int', str(int(var1) * int(var2)))
     ############################################################################
 
@@ -303,11 +303,11 @@ class Instruction(object):
         type1, var1 = self.getvar(memory, 1)
         type2, var2 = self.getvar(memory, 2)
         if(type1 != 'int'):
-            exit_error(f'"{self.opcode}" argument 2 is not type of int', 32)
+            exit_error(f'"{self.opcode}" argument 2 is not type of int', 53)
         if(type2 != 'int'):
-            exit_error(f'"{self.opcode}" argument 3 is not type of int', 32)
+            exit_error(f'"{self.opcode}" argument 3 is not type of int', 53)
         if(int(var2) == 0):
-            exit_error('Division by zero', 32)
+            exit_error('Division by zero', 57)
         self.setval(memory, 0, 'int', str(int(var1) / int(var2)))
     ############################################################################
 
