@@ -7,7 +7,7 @@ from typing import TextIO
 import xml.etree.ElementTree as ET
 
 from common import *
-from vir_machine import *
+from virtual_mc import *
 from instruction import *
 
 

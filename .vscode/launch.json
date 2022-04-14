@@ -13,8 +13,8 @@
             "request": "launch",
             "program": "src/interpret.py",
             "args": [
-                "--source=./Testy/interpret-only/valid/${input:tests}.src",
-                "--input=./Testy/interpret-only/valid/${input:tests}.in"
+                "--source=./Testy/interpret-only/${input:tests}.src",
+                "--input=./Testy/interpret-only/${input:tests}.in"
             ],
             "console": "integratedTerminal",
             "justMyCode": true

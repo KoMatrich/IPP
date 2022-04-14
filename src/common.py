@@ -32,7 +32,6 @@ def isInt(s: str):
 
 
 numeric_types = ['int']
-
 var_types = numeric_types + ['bool', 'string', 'nil']
 
 symb_string = ['string', 'var']
@@ -41,4 +40,4 @@ symb_num = numeric_types + ['var']
 symb = var_types + ['var']
 
 if __name__ == "__main__":
-    exit_error('This file is not meant to be run directly', 1)
+    exit_error('This file is not meant to be run directly', 99)

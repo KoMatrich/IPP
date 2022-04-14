@@ -23,12 +23,12 @@ class Variable:
 
     def getvalue(self) -> 'str':
         if(self._value is None):
-            exit_error('Using variable that is not defined', 52)
+            exit_error('Using variable that is not defined', 54)
         return self._value
 
     def gettype(self) -> 'str':
         if(self._type is None):
-            exit_error('Using variable that is not defined', 52)
+            exit_error('Using variable that is not defined', 54)
         return self._type
 
     def defined(self) -> 'bool':
@@ -56,7 +56,7 @@ class Frame:
             if(name == var.getname()):
                 return var
 
-        exit_error(f'Variable "{name}" is not defined (F)', 52)
+        exit_error(f'Variable "{name}" is not defined (F)', 54)
 
     def isdefined(self, name: str) -> 'bool':
         for var in self.variables:
@@ -157,7 +157,7 @@ class Memory:
         elif(frame == 'LF'):
             self.lf.top().createvar(name)
         else:
-            exit_error(f'Invalid frame "{frame}"', 99)
+            exit_error(f'Invalid frame "{frame}"', 55)
 
     def isdefined(self, frame: 'str', name: 'str') -> 'bool':
         if(frame == 'GF'):
@@ -169,19 +169,19 @@ class Memory:
         elif(frame == 'LF'):
             return self.lf.top().isdefined(name)
         else:
-            exit_error(f'Invalid frame "{frame}"', 99)
+            exit_error(f'Invalid frame "{frame}"', 55)
 
     def getvar(self, frame: 'str', name: 'str') -> 'tuple[str,str]':
         if(frame == 'GF'):
             var = self.gf.getvar(name)
         elif(frame == 'TF'):
             if (self.tf is None):
-                exit_error(f'Frame "TF" is not defined', 52)
+                exit_error(f'Frame "TF" is not defined', 55)
             var = self.tf.getvar(name)
         elif(frame == 'LF'):
             var = self.lf.top().getvar(name)
         else:
-            exit_error(f'Invalid frame "{frame}"', 52)
+            exit_error(f'Invalid frame "{frame}"', 55)
         return var.gettype(), var.getvalue()
 
     def setvalue(self, frame: 'str', name: 'str', type: 'str', value: 'str'):
@@ -189,12 +189,12 @@ class Memory:
             var = self.gf.getvar(name)
         elif(frame == 'TF'):
             if (self.tf is None):
-                exit_error(f'Frame "TF" is not defined', 52)
+                exit_error(f'Frame "TF" is not defined', 55)
             var = self.tf.getvar(name)
         elif(frame == 'LF'):
             var = self.lf.top().getvar(name)
         else:
-            exit_error(f'Invalid frame "{frame}"', 52)
+            exit_error(f'Invalid frame "{frame}"', 55)
         var.setvalue(value, type)
 
     def createframe(self):
@@ -231,5 +231,6 @@ class Memory:
         line = line.rstrip()
         return line
 
+
 if __name__ == "__main__":
-    exit_error('This file is not meant to be run directly', 1)
+    exit_error('This file is not meant to be run directly', 99)

@@ -1,6 +1,6 @@
 from common import *
 import xml.etree.ElementTree as ET
-from vir_machine import *
+from virtual_mc import *
 
 # This file contains the code for the interpretation of the instructions
 
@@ -122,7 +122,7 @@ class Instruction(object):
         args = sorted(instruction, key=lambda x: x.tag[3:])
 
         index_list: 'list[str]' = []
-        max = len(args)+1
+        max = len(args)
         for arg in args:
             # check if argument is valid
             name = arg.tag[:3].lower()
@@ -139,7 +139,7 @@ class Instruction(object):
             number = int(number)
             if (number < 1) or (max < number):
                 exit_error(
-                    f'"{self.opcode}" argument "{arg.tag}" tag index "{number}" is not it <1:{max}>', 32)
+                    f'"{self.opcode}" argument "{arg.tag}" tag index "{number}" is not in <1:{max}> or some arguments are missing', 32)
 
             # check for duplicates
             if(arg.tag in index_list):
@@ -490,7 +490,7 @@ class Instruction(object):
 
     def _case_write_run(self, memory: 'Memory'):
         if(self.args[0].type == 'nil'):
-            print('nil@nil')
+            print('', end='')
         else:
             _, var = self.getvar(memory, 0)
             print(var, end='')
@@ -689,3 +689,7 @@ class Instruction(object):
     def _case_break_run(self, memory: 'Memory'):
         eprint(memory)
     ###############################################################################
+
+
+if __name__ == "__main__":
+    exit_error('This file is not meant to be run directly', 99)
