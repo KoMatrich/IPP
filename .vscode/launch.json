@@ -1,9 +1,13 @@
 {
     "inputs": [
     {
-        "id": "tests",
-        "description": "Select client or server",
-        "type": "promptString",
+        "id": "promptPath",
+        "type": "command",
+        "command": "extension.commandvariable.promptStringRemember",
+        "args": {
+        "key": "path",
+        "description": "Enter a path"
+        }
     }
     ],
     "configurations": [
@@ -13,8 +17,8 @@
             "request": "launch",
             "program": "src/interpret.py",
             "args": [
-                "--source=./Testy/interpret-only/${input:tests}.src",
-                "--input=./Testy/interpret-only/${input:tests}.in"
+                "--source=./Testy/interpret-only/${input:promptPath}.src",
+                "--input=./Testy/interpret-only/${input:promptPath}.in"
             ],
             "console": "integratedTerminal",
             "justMyCode": true

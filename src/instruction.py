@@ -253,16 +253,16 @@ class Instruction(object):
     def _check_arithmetic_args(self):
         self.check_number_args(3)
         self.check_type(0, 'var')
-        self.check_types(1, numeric_types)
-        self.check_types(2, numeric_types)
+        self.check_types(1, symb_num)
+        self.check_types(2, symb_num)
     ############################################################################
 
     def _case_add_check_args(self):
         self._check_arithmetic_args()
 
     def _case_add_run(self, memory: 'Memory'):
-        type1, var1 = self.getvar(memory, 2)
-        type2, var2 = self.getvar(memory, 3)
+        type1, var1 = self.getvar(memory, 1)
+        type2, var2 = self.getvar(memory, 2)
         if(type1 != 'int'):
             exit_error(f'"{self.opcode}" argument 2 is not type of int', 32)
         if(type2 != 'int'):
@@ -274,8 +274,8 @@ class Instruction(object):
         self._check_arithmetic_args()
 
     def _case_sub_run(self, memory: 'Memory'):
-        type1, var1 = self.getvar(memory, 2)
-        type2, var2 = self.getvar(memory, 3)
+        type1, var1 = self.getvar(memory, 1)
+        type2, var2 = self.getvar(memory, 2)
         if(type1 != 'int'):
             exit_error(f'"{self.opcode}" argument 2 is not type of int', 32)
         if(type2 != 'int'):
@@ -287,8 +287,8 @@ class Instruction(object):
         self._check_arithmetic_args()
 
     def _case_mul_run(self, memory: 'Memory'):
-        type1, var1 = self.getvar(memory, 2)
-        type2, var2 = self.getvar(memory, 3)
+        type1, var1 = self.getvar(memory, 1)
+        type2, var2 = self.getvar(memory, 2)
         if(type1 != 'int'):
             exit_error(f'"{self.opcode}" argument 2 is not type of int', 32)
         if(type2 != 'int'):
@@ -300,8 +300,8 @@ class Instruction(object):
         self._check_arithmetic_args()
 
     def _case_idiv_run(self, memory: 'Memory'):
-        type1, var1 = self.getvar(memory, 2)
-        type2, var2 = self.getvar(memory, 3)
+        type1, var1 = self.getvar(memory, 1)
+        type2, var2 = self.getvar(memory, 2)
         if(type1 != 'int'):
             exit_error(f'"{self.opcode}" argument 2 is not type of int', 32)
         if(type2 != 'int'):
