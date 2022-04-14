@@ -1,0 +1,33 @@
+VSETKY SKRIPTY:
+• 10 - chybějící parametr skriptu (je-li třeba) nebo použití zakázané kombinace parametrů;
+• 11 - chyba při otevírání vstupních souborů (např. neexistence, nedostatečné oprávnění);
+• 12 - chyba při otevření výstupních souborů pro zápis (např. nedostatečné oprávnění, chyba
+při zápisu);
+• 20 – 69 - návratové kódy chyb specifických pro jednotlivé skripty;
+• 99 - interní chyba (neovlivněná vstupními soubory či parametry příkazové řádky; např. chyba
+alokace paměti).
+
+TESTY:
+• 41 - zadaný adresář (path v parametru --directory) nebo zadaný soubor (file v parametrech
+--parse-script, --int-script a --jexampath) neexistuje či není přístupný.
+
+
+PARSER:
+Chybové návratové kódy specifické pro analyzátor:
+• 21 - chybná nebo chybějící hlavička ve zdrojovém kódu zapsaném v IPPcode22;
+• 22 - neznámý nebo chybný operační kód ve zdrojovém kódu zapsaném v IPPcode22;
+• 23 - jiná lexikální nebo syntaktická chyba zdrojového kódu zapsaného v IPPcode22.
+
+INTERPRET:
+• 31 - chybný XML formát ve vstupním souboru (soubor není tzv. dobře formátovaný, angl.
+well-formed, viz [1]);
+• 32 - neočekávaná struktura XML (např. element pro argument mimo element pro instrukci,instrukce s duplicitním pořadím nebo záporným pořadím);
+
+• 52 - chyba při sémantických kontrolách vstupního kódu v IPPcode22 (např. použití nedefinovaného návěští, redefinice proměnné);
+
+• 53 - běhová chyba interpretace – špatné typy operandů;
+• 54 - běhová chyba interpretace – přístup k neexistující proměnné (rámec existuje);
+• 55 - běhová chyba interpretace – rámec neexistuje (např. čtení z prázdného zásobníku rámců);
+• 56 - běhová chyba interpretace – chybějící hodnota (v proměnné, na datovém zásobníku nebo zásobníku volání);
+• 57 - běhová chyba interpretace – špatná hodnota operandu (např. dělení nulou, špatná návratová hodnota instrukce EXIT);
+• 58 - běhová chyba interpretace – chybná práce s řetězcem
