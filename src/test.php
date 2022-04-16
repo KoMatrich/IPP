@@ -1,5 +1,6 @@
 <?php
-require_once('fuctions.php');
+require_once('functions.php');
+require_once('html_builder.php');
 
 //begining of main program
 ini_set('display_errors', 'stderr');
@@ -106,12 +107,16 @@ if (!$parser_only)
 //gets all test files
 $output = fopen('index.html', 'w') or error(12, "can't create file \"+index.html+\"");
 
+$builder = new Builder($output);
+
 $correct = $files = open($dir, $recursive);
 $count = count($files);
 
 if (!$int_only) {//run paser
     $index = 0;
     $done_ok = 0;
+    $builder->start_section("Parser tests");
+    $builder->add_header();
     foreach ($files as $test) {
         $index++;
 
@@ -124,35 +129,34 @@ if (!$int_only) {//run paser
 
         if ($parser_only) {
             if ($rc != $run_rc) {
-                Printf("[Parser tests]: %-45s %s %d != %d\n", $test, "Test retuned wrong return code", $run_rc, $rc);
-                continue;
+                $builder->add_error($test, "return code \"$run_rc\" is not equal to \"$rc\"");
+                goto clean_parser_tmp;
             }
 
             ///@TODO use JExamXML
             exec("diff -w -B -q $test$p_out $test$p_out", $_, $return_code);
             if ($return_code != 0) {
-                Printf("[Parser tests]: %-45s output file differ from presset\n", $test);
-                continue;
+                $builder->add_error($test, "output is not equal to preset");
+                goto clean_parser_tmp;
             }
         } else {
             if ($rc != 0) {
-                Printf("[Parser tests]: %-45s %s %d != %d\n", $test, "Test retuned wrong return code", $run_rc, $rc);
+                $builder->add_error($test, "return code \"$run_rc\" is not equal to \"$rc\"");
                 unset($correct[$index - 1]);
-                continue;
+                goto clean_parser_tmp;
             }
 
             exec("diff -w -B -q $test$p_out $test$p_out", $_, $return_code);
             if ($return_code != 0) {
-                Printf("[Parser tests]: %-45s output file differ from presset\n", $test);
-                continue;
+                $builder->add_error($test, "output is not equal to preset");
+                goto clean_parser_tmp;
             }
         }
 
         $done_ok++;
-        if ($index % 20 == 0 || $index == $count) {
-            print_progress("Parser tests", $index, $count, $done_ok);
-        }
+        $builder->add_success($test);
 
+        clean_parser_tmp:
         if(!$no_clean){
             if (file_exists($test.$p_out))
                 unlink($test.$p_out);
@@ -160,11 +164,15 @@ if (!$int_only) {//run paser
                 unlink($test.$p_rc);
         }
     }
+    $builder->end_section();
 }
 
 if (!$parser_only) {//run interpreter
     $index = 0;
     $done_ok = 0;
+    $builder->start_section("Interpreter tests");
+    $builder->add_header();
+
     foreach ($correct as $test) {
         $index++;
 
@@ -179,20 +187,21 @@ if (!$parser_only) {//run interpreter
         write_tmp_file($test.$i_rc, $run_rc);
 
         if ($rc != $run_rc) {
-            Printf("[Interpeter tests]: %-45s %s %d != %d\n", $test, "Test retuned wrong return code", $run_rc, $rc);
-            continue;
+            $builder->add_error($test, "return code \"$run_rc\" is not equal to \"$rc\"");
+            goto clean_interpret_tmp;
         }
 
         exec("diff -w -B -q $test$i_out $test$i_out", $_, $return_code);
         if ($return_code != 0) {
-            Printf("[Interpeter tests]: %-45s output file differ from presset\n", $test);
-            continue;
+            $builder->add_error($test, "output is not equal to preset");
+            goto clean_interpret_tmp;
         }
 
-        Printf("[Interpeter tests]: %-45s %s\n", $test, "OK");
+        $builder->add_success($test);
 
         $done_ok++;
 
+        clean_interpret_tmp:
         if(!$no_clean){
             if (file_exists($test.$i_out))
                 unlink($test.$i_out);
@@ -200,6 +209,11 @@ if (!$parser_only) {//run interpreter
                 unlink($test.$i_rc);
         }
     }
+    $builder->end_section();
 }
+
+$mode = $parser_only || $int_only ? ($int_only ? 'Interpret only': 'Parser only') : 'Parser and Interpreter';
+$builder->build($mode,$count,$done_ok);
+fclose($output);
 
 exit (0);

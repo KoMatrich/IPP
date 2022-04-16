@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Parser tests</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        background-color: rgb(220, 220, 250);
+        align-content: center;
+    }
+
+    div.section {
+        width: 90%;
+        padding: 10px;
+        margin: auto;
+        margin-bottom: 10px;
+        border: 1px solid black;
+        border-radius: 10px;
+        background-color: rgb(255, 255, 255);
+    }
+
+</style>
+
+<body>
+    <div class="section">
+        <h1>%TITLE%</h1>
+        <p>
+            Test mode: %MODE%<br>
+            Total tests: %COUNT%<br>
+            Passed tests: %DONE_OK% (%DONE_PER%%)<br>
+        </p>
+    </div>
+
+    <div class="section">
+        %BODY%
+    </div>
+</body>
+
+</html>
