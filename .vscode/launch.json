@@ -12,7 +12,24 @@
     ],
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "PHP: test.php",
+            "type": "php",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/test.php",
+            "cwd": "${workspaceFolder}/src",
+            "port": 0,
+            "runtimeArgs": [
+                "-dxdebug.start_with_request=yes"
+            ],
+            "env": {
+                "XDEBUG_MODE": "debug,develop",
+                "XDEBUG_CONFIG": "client_port=${port}"
+            },
+            "args":
+            ["-r","-d=Testy/interpret-only","-io"]
+        },
+        {
+            "name": "Python: interpret.py",
             "type": "python",
             "request": "launch",
             "program": "src/interpret.py",
@@ -22,27 +39,7 @@
             ],
             "console": "integratedTerminal",
             "justMyCode": true
-        },
-        {
-            "name": "Launch currently open script",
-            "args": [
-                "-d=./Testy/interpret-only",
-                "-r",
-                "--int-only",
-                "--int-script=${workspaceFolder}/src/interpret.py"
-            ],
-            "type": "php",
-            "request": "launch",
-            "program": "${workspaceFolder}/src/test.php",
-            "cwd": "${workspaceFolder}/",
-            "port": 0,
-            "runtimeArgs": [
-                "-dxdebug.start_with_request=yes"
-            ],
-            "env": {
-                "XDEBUG_MODE": "debug,develop",
-                "XDEBUG_CONFIG": "client_port=${port}"
-            }
         }
     ]
+
 }

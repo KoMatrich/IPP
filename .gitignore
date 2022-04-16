@@ -1,6 +1,9 @@
-*Testy
-*__pycache__
-/xplag
+src/Testy
+src/__pycache__
+src/clean_tests.ffs_batch
+src/index.html
+/ipp-2022-tests
+/odevzdane
 *.in
 *.out
 *.src
