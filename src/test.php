@@ -23,8 +23,10 @@ $no_clean = false;
 //extension of files
 $p_rc = ".p_run_rc";
 $p_out = ".p_run_out";
+$p_err = ".p_run_err";
 $i_rc = ".i_run_rc";
 $i_out = ".i_run_out";
+$i_err = ".i_run_err";
 
 //check for help argument
 foreach($argv as $arg){
@@ -112,6 +114,9 @@ $builder = new Builder($output);
 $correct = $files = open($dir, $recursive);
 $count = count($files);
 
+$run_out = array();
+$run_rc = 0;
+
 if (!$int_only) {//run paser
     $index = 0;
     $done_ok = 0;
@@ -121,9 +126,9 @@ if (!$int_only) {//run paser
     foreach ($files as $test) {
         $index++;
 
-        get_paths($test, $in, $out, $rc, $src);
+        get_paths($test, $out, $rc);
 
-        exec("cat $test.src | php $parser $in 2>&1", $run_out, $run_rc);
+        exec("cat $test.src | php $parser 2>$test$p_err", $run_out, $run_rc);
 
         write_tmp_file($test.$p_out, implode("\n", $run_out));
         write_tmp_file($test.$p_rc, $run_rc);
@@ -159,6 +164,8 @@ if (!$int_only) {//run paser
 
         clean_parser_tmp:
         if(!$no_clean){
+            if (file_exists($test.$i_err))
+                unlink($test.$i_err);
             if (file_exists($test.$p_out))
                 unlink($test.$p_out);
             if (file_exists($test.$p_rc))
@@ -177,12 +184,12 @@ if (!$parser_only) {//run interpreter
     foreach ($correct as $test) {
         $index++;
 
-        get_paths($test, $in, $out, $rc, $src);
+        get_paths($test, $out, $rc);
 
         if ($int_only)
-            exec("cat $test.src | php $interpreter $in 2>&1", $run_out, $run_rc);
+            exec("python3 $interpreter --input=\"$test.in\" --source=\"$test.src\" 2>$test$i_err", $run_out, $run_rc);
         else
-            exec("cat $test.$p_out | php $interpreter $in 2>&1", $run_out, $run_rc);
+            exec("python3 $interpreter --input=\"$test.in\" --source=\"$test$p_out\" 2>$test$i_err", $run_out, $run_rc);
 
         write_tmp_file($test.$i_out, implode("\n", $run_out));
         write_tmp_file($test.$i_rc, $run_rc);
@@ -204,6 +211,8 @@ if (!$parser_only) {//run interpreter
 
         clean_interpret_tmp:
         if(!$no_clean){
+            if (file_exists($test.$i_err))
+                unlink($test.$i_err);
             if (file_exists($test.$i_out))
                 unlink($test.$i_out);
             if (file_exists($test.$i_rc))

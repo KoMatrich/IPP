@@ -106,15 +106,12 @@ function print_progress($name, $index, $count, $done_ok)
 
 //get content of test files to variables
 //if optional files are missing, generate them
-function get_paths($test, &$in, &$out, &$rc, &$src)
+function get_paths($test, &$out, &$rc)
 {
-    if (file_exists($test . ".in") == false) {
+    if (!file_exists($test . ".in")) {
         $in = fopen($test . ".in", "w") or error(12,"can't create file \"$test.in\"");
         fclose($in);
     }
-    $in = file_get_contents($test . ".in");
-    if ($in === false)
-        error(11, "can't read file \"$test.in\"");
 
     if (file_exists($test . ".out") == false) {
         $out = fopen($test . ".out", "w") or error(12,"can't create file \"$test.out\"");
@@ -133,12 +130,8 @@ function get_paths($test, &$in, &$out, &$rc, &$src)
     if ($rc === false)
         error(11, "can't read file \"$test.rc\"");
 
-    if (file_exists($test . ".src") == false) {
-        error(11, "can't read file \"$test.src\"");
-    }
 
-    $src = file_get_contents($test . ".src");
-    if ($src === false) {
+    if (!file_exists($test . ".src")) {
         error(11, "can't read file \"$test.src\"");
     }
 }
