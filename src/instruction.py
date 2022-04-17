@@ -1,4 +1,5 @@
 from common import *
+import re
 import xml.etree.ElementTree as ET
 from virtual_mc import *
 
@@ -14,7 +15,10 @@ class Argument:
         self.type = self.type.lower()
 
         if(arg.text is None):
-            exit_error(f'Argument "{arg.tag}" has no value', 32)
+            if(self.type == 'string'):
+                arg.text = ''
+            else:
+                exit_error(f'Argument "{arg.tag}" has no value', 32)
 
         if(self.type == 'var'):
             self.frame = arg.text[:2]
@@ -437,26 +441,26 @@ class Instruction(object):
                 f'"{self.opcode}" argument 1 cant be converted to char', 58)
         self.setval(memory, 0, 'char', out)
 
-    def _case_str2int_check_args(self):
+    def _case_stri2int_check_args(self):
         self.check_number_args(3)
         self.check_type(0, 'var')
         self.check_types(1, symb)
         self.check_types(2, symb)
 
-    def _case_str2int_run(self, memory: 'Memory'):
+    def _case_stri2int_run(self, memory: 'Memory'):
         type1, var1 = self.getvar(memory, 1)
         type2, var2 = self.getvar(memory, 2)
-        if(type1 != 'str'):
+        if(type1 != 'string'):
             exit_error(f'"{self.opcode}" argument 1 is not type of str', 32)
         if(type2 != 'int'):
             exit_error(f'"{self.opcode}" argument 2 is not type of int', 32)
 
         try:
-            out = var1[int(var2)]
+            out = str(ord(var1[int(var2)]))
         except(IndexError):
             exit_error('"str2int" argument 2 is out of range', 58)
 
-        self.setval(memory, 0, 'char', out)
+        self.setval(memory, 0, 'int', out)
     ############################################################################
 
     ############################################################################
@@ -470,6 +474,9 @@ class Instruction(object):
     def _case_read_run(self, memory: 'Memory'):
         line = memory.getinput()
         type = self.args[1].content
+
+        # TODO fix Testy/both/read/read_badval
+
         if(type == 'int'):
             val = str(int(line))
         elif(type == 'string'):
@@ -510,12 +517,12 @@ class Instruction(object):
         type1, var1 = self.getvar(memory, 1)
         type2, var2 = self.getvar(memory, 2)
 
-        if(type1 != 'str'):
+        if(type1 != 'string'):
             exit_error(f'"{self.opcode}" argument 1 is not type of str', 32)
-        if(type2 != 'str'):
+        if(type2 != 'string'):
             exit_error(f'"{self.opcode}" argument 2 is not type of str', 32)
 
-        self.setval(memory, 0, 'str', var1 + var2)
+        self.setval(memory, 0, 'string', var1 + var2)
     ############################################################################
 
     def _case_strlen_check_args(self):
@@ -526,7 +533,7 @@ class Instruction(object):
     def _case_strlen_run(self, memory: 'Memory'):
         type1, var1 = self.getvar(memory, 1)
 
-        if(type1 != 'str'):
+        if(type1 != 'string'):
             exit_error(f'"{self.opcode}" argument 1 is not type of str', 32)
 
         self.setval(memory, 0, 'int', str(len(var1)))
@@ -542,13 +549,13 @@ class Instruction(object):
         type1, var1 = self.getvar(memory, 1)
         type2, var2 = self.getvar(memory, 2)
 
-        if(type1 != 'str'):
+        if(type1 != 'string'):
             exit_error(f'"{self.opcode}" argument 1 is not type of str', 32)
         if(type2 != 'int'):
             exit_error(f'"{self.opcode}" argument 2 is not type of int', 32)
 
         try:
-            self.setval(memory, 0, 'str', var1[int(var2)])
+            self.setval(memory, 0, 'string', var1[int(var2)])
         except IndexError:
             exit_error('"getchar" argument 2 is out of range', 58)
     ############################################################################
@@ -560,24 +567,40 @@ class Instruction(object):
         self.check_types(2, symb_string)
 
     def _case_setchar_run(self, memory: 'Memory'):
+        type, var = self.getvar(memory, 0)
         type1, var1 = self.getvar(memory, 1)
         type2, var2 = self.getvar(memory, 2)
-
-        if(type1 != 'str'):
+        if(type != 'string'):
+            exit_error(f'"{self.opcode}" argument 0 is not type of str', 32)
+        if(type1 != 'int'):
             exit_error(f'"{self.opcode}" argument 1 is not type of int', 32)
-        if(type2 != 'str'):
+        if(type2 != 'string'):
             exit_error(f'"{self.opcode}" argument 2 is not type of str', 32)
 
-        type, var = self.getvar(memory, 0)
-        if(type != 'str'):
-            exit_error(f'"{self.opcode}" argument 0 is not type of str', 32)
-
+        # i is index of char in string to change
+        i = -1
         try:
-            i = int(var2)
-            var = var[:i]+var1[0]+var[i+1:]
+            i = int(var1)
+        except ValueError:
+            exit_error(f'"{self.opcode}" argument 1 is not type of int', 32)
+
+        char = var2[0]
+
+        escapes = re.search(r'\\\d\d\d', var2)
+        if(escapes):
+            # found escape sequence
+            if(escapes.start() == 0):
+                # escape sequence is at the beginning of string
+                # extract escape sequence number and get corresponding char
+                char = chr(int(var2[1:4]))
+
+        # try to change char in string
+        try:
+            var = var[:i]+char+var[i+1:]
         except IndexError:
-            exit_error('"setchar" argument 1 is out of range', 58)
-        self.setval(memory, 0, 'str', var)
+            exit_error(f'"{self.opcode}" argument 1 is out of range', 58)
+
+        self.setval(memory, 0, 'string', var)
     ############################################################################
 
     def _case_type_check_args(self):
@@ -586,17 +609,15 @@ class Instruction(object):
         self.check_types(1, symb)
 
     def _case_type_run(self, memory: 'Memory'):
-        if self.isdefined(memory, 1):
-            type, _ = self.getvar(memory, 0)
-            self.setval(memory, 0, 'string', type)
-        elif self.isconst(1):
-            type = self.args[1].type
-            if(type in var_types):
+        if(self.args[1].type == 'var'):
+            if(memory.isdefined(self.args[1].frame, self.args[1].name)):
+                type, _ = self.getvar(memory, 1)
                 self.setval(memory, 0, 'string', type)
             else:
-                exit_error('"type" argument 1 is not type of var', 32)
+                self.setval(memory, 0, 'string', '')
         else:
-            self.setval(memory, 0, 'string', '')
+            type, _ = self.getvar(memory, 1)
+            self.setval(memory, 0, 'string', type)
     ############################################################################
 
     ############################################################################

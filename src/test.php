@@ -113,6 +113,8 @@ $builder = new Builder($output);
 
 $correct = $files = open($dir, $recursive);
 $count = count($files);
+if(!$parser_only)
+    $count*=2;
 
 if (!$int_only) {//run paser
     $index = 0;
@@ -170,6 +172,8 @@ if (!$int_only) {//run paser
             if($parser_only)
                 if (file_exists($test.$p_out))
                     unlink($test.$p_out);
+            if(file_exists($test.$p_err))
+                unlink($test.$p_err);
         }
     }
     $builder->end_section();
@@ -221,6 +225,8 @@ if (!$parser_only) {//run interpreter
                 unlink($test.$i_rc);
             if (file_exists($test.$p_out))
                 unlink($test.$p_out);
+            if(file_exists($test.$i_err))
+                unlink($test.$i_err);
         }
     }
     $builder->end_section();

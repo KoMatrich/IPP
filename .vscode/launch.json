@@ -18,8 +18,8 @@
             "program": "interpret.py",
             "cwd": "${workspaceFolder}/src",
             "args": [
-                "--source=./Testy/interpret-only/${input:promptPath}.src",
-                "--input=./Testy/interpret-only/${input:promptPath}.in"
+                "--source=./${input:promptPath}.p_run_out",
+                "--input=./${input:promptPath}.in"
             ],
             "console": "integratedTerminal",
             "justMyCode": true
@@ -73,7 +73,7 @@
                 "XDEBUG_CONFIG": "client_port=${port}"
             },
             "args":
-            ["-r","-d=Testy/both"]
+            ["-r","-d=Testy/both","-nc"]
         }
     ]
 
