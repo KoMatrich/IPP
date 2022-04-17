@@ -121,7 +121,7 @@ class Memory:
     def __init__(self, input: 'TextIO'):
         # Memory frames
         self.gf: 'Frame' = Frame()
-        self.tf: 'Frame|None' = None
+        self._tf: 'Frame|None' = None
         self.lf: 'Stack[Frame]' = Stack()
 
         # Stacks
@@ -140,10 +140,10 @@ class Memory:
     def __str__(self) -> str:
         lines = f'index:{self.index}\n'
         lines += f'GF:\n{self.gf}\n'
-        if(self.tf is None):
+        if(self._tf is None):
             lines += f'TF:none\n'
         else:
-            lines += f'TF:\n{self.tf}\n'
+            lines += f'TF:\n{self._tf}\n'
         lines += f'LF:\n{self.lf}\n'
         lines += f'Stack:\n{self.data_stack}\n'
         lines += f'Labels:\n{self.labels}\n'
@@ -153,9 +153,9 @@ class Memory:
         if(frame == 'GF'):
             self.gf.createvar(name)
         elif(frame == 'TF'):
-            if(self.tf is None):
+            if(self._tf is None):
                 exit_error(f'Frame "TF" is not defined', 55)
-            self.tf.createvar(name)
+            self._tf.createvar(name)
         elif(frame == 'LF'):
             self.lf.top().createvar(name)
         else:
@@ -165,9 +165,9 @@ class Memory:
         if(frame == 'GF'):
             return self.gf.isdefined(name)
         elif(frame == 'TF'):
-            if(self.tf is None):
+            if(self._tf is None):
                 exit_error(f'Frame "TF" is not defined', 55)
-            return self.tf.isdefined(name)
+            return self._tf.isdefined(name)
         elif(frame == 'LF'):
             return self.lf.top().isdefined(name)
         else:
@@ -177,9 +177,9 @@ class Memory:
         if(frame == 'GF'):
             var = self.gf.getvar(name)
         elif(frame == 'TF'):
-            if (self.tf is None):
+            if (self._tf is None):
                 exit_error(f'Frame "TF" is not defined', 55)
-            var = self.tf.getvar(name)
+            var = self._tf.getvar(name)
         elif(frame == 'LF'):
             var = self.lf.top().getvar(name)
         else:
@@ -190,9 +190,9 @@ class Memory:
         if(frame == 'GF'):
             var = self.gf.getvar(name)
         elif(frame == 'TF'):
-            if (self.tf is None):
+            if (self._tf is None):
                 exit_error(f'Frame "TF" is not defined', 55)
-            var = self.tf.getvar(name)
+            var = self._tf.getvar(name)
         elif(frame == 'LF'):
             var = self.lf.top().getvar(name)
         else:
@@ -200,15 +200,16 @@ class Memory:
         var.setvalue(value, type)
 
     def createframe(self):
-        self.tf = Frame()
+        self._tf = Frame()
 
     def pushframe(self):
-        if(self.tf is None):
+        if(self._tf is None):
             exit_error(f'Frame "TF" is not defined', 55)
-        self.lf.push(self.tf)
+        self.lf.push(self._tf)
+        self._tf = None
 
     def popframe(self):
-        self.tf = self.lf.pop()
+        self._tf = self.lf.pop()
 
     def inccounter(self):
         self.index += 1

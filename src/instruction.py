@@ -4,6 +4,7 @@ from virtual_mc import *
 
 # This file contains the code for the interpretation of the instructions
 
+
 class Argument:
     def __init__(self, arg: 'ET.Element'):
         self.type = arg.get('type')
@@ -165,12 +166,12 @@ class Instruction(object):
     def check_type(self, arg_index: 'int', type: 'str'):
         if self.args[arg_index].type != type:
             exit_error(
-                f'Instruction {self.opcode} arg{arg_index} is not of type "{type}"', 32)
+                f'Instruction {self.opcode} arg{arg_index} is not of type "{type}"', 53)
 
     def check_types(self, arg_index: 'int', types: 'list[str]'):
         if not (self.args[arg_index].type in types):
             exit_error(
-                f'Instruction {self.opcode} arg{arg_index} is not of type of {symb}', 32)
+                f'Instruction {self.opcode} arg{arg_index} is not of type of {symb}', 53)
 
     ############################################################################
     # Instructions implementations
@@ -621,11 +622,9 @@ class Instruction(object):
         self.check_types(2, symb)
 
     def _case_jumpifeq_run(self, memory: 'Memory'):
-        type1, var1 = self.getvar(memory, 0)
-        type2, var2 = self.getvar(memory, 1)
+        type1, var1 = self.getvar(memory, 1)
+        type2, var2 = self.getvar(memory, 2)
 
-        # NOTE if type nill, it will be treated as false
-        # there for wont jump
         if(type1 != type2):
             if(type1 != 'nil') and (type2 != 'nil'):
                 exit_error(
@@ -683,6 +682,7 @@ class Instruction(object):
         _, val = self.getvar(memory, 0)
         eprint(val)
     ###############################################################################
+
     def _case_break_check_args(self):
         self.check_number_args(0)
 
