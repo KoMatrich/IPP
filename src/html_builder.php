@@ -48,21 +48,26 @@
                 $this->index--;
         }
 
+        private function addRow($str, $class)
+        {
+            $this->write('<tr class="'.$class.'">');
+            $this->write($str);
+            $this->write('</tr>');
+        }
+
         function start_section($name){
             $this->write("<h2>$name</h2>");
-            $this->write("<table>");
+            $this->write("<table class=\"results\">");
         }
 
         function add_header(){
-            $this->write("<tr><td>Test Path</td><td>Status</td><td>More info</td></tr>");
+            $this->addRow("<td>Test Path</td><td>Status</td><td>More info</td>", "header");
         }
-
         function add_success($test){
-            $this->write("<tr><td>$test</td><td>Passed</td><td></td></tr>");
+            $this->addRow("<td>$test</td><td class=\"success\">&#10004;</td><td></td>", "success");
         }
-
         function add_error($test,$massage){
-            $this->write("<tr><td>$test</td><td>Failed</td><td>$massage</td></tr>");
+            $this->addRow("<td>$test</td><td class=\"failure\">&#10008;</td><td>$massage</td>","failure");
         }
 
         function end_section(){

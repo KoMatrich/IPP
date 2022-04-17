@@ -117,6 +117,7 @@ if (!$int_only) {//run paser
     $done_ok = 0;
     $builder->start_section("Parser tests");
     $builder->add_header();
+
     foreach ($files as $test) {
         $index++;
 
