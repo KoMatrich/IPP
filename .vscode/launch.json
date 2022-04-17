@@ -32,7 +32,8 @@
             "name": "Python: interpret.py",
             "type": "python",
             "request": "launch",
-            "program": "src/interpret.py",
+            "program": "interpret.py",
+            "cwd": "${workspaceFolder}/src",
             "args": [
                 "--source=./Testy/interpret-only/${input:promptPath}.src",
                 "--input=./Testy/interpret-only/${input:promptPath}.in"
