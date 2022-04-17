@@ -113,6 +113,8 @@ $builder = new Builder($output);
 
 $correct = $files = open($dir, $recursive);
 $count = count($files);
+if(!$parser_only)
+    $count*=2;
 
 if (!$int_only) {//run paser
     $index = 0;
