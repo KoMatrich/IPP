@@ -220,7 +220,7 @@ class Instruction(object):
         self.check_type(0, 'label')
 
     def _case_call_run(self, memory: 'Memory'):
-        memory.return_stack.push(memory.index)
+        memory.return_push(memory.index)
         memory.jump(self.args[0].content)
     ############################################################################
 
@@ -228,7 +228,7 @@ class Instruction(object):
         self.check_number_args(0)
 
     def _case_return_run(self, memory: 'Memory'):
-        index = memory.return_stack.pop()
+        index = memory.return_pop()
         memory.index = index
     ############################################################################
 
@@ -237,7 +237,8 @@ class Instruction(object):
         self.check_types(0, symb)
 
     def _case_pushs_run(self, memory: 'Memory'):
-        memory.data_stack.push(self.getvar(memory, 0))
+        type, var = self.getvar(memory, 0)
+        memory.data_push(type, var)
     ############################################################################
 
     def _case_pops_check_args(self):
@@ -245,7 +246,7 @@ class Instruction(object):
         self.check_type(0, 'var')
 
     def _case_pops_run(self, memory: 'Memory'):
-        type, val = memory.data_stack.pop()
+        type, val = memory.data_pop()
         self.setval(memory, 0, type, val)
     ############################################################################
 
