@@ -41,27 +41,27 @@ class Variable:
 
 class Frame:
     def __init__(self):
-        self.variables: 'list[Variable]' = []
+        self._variables: 'list[Variable]' = []
 
     def __str__(self) -> str:
-        return '\n'.join([str(var) for var in self.variables])
+        return '\n'.join([str(var) for var in self._variables])
 
     def createvar(self, name: str):
-        if(name in self.variables):
+        if(name in self._variables):
             exit_error(f'Variable "{name}" already exists (F)', 52)
         else:
-            self.variables.append(Variable(name))
-            return self.variables[-1]
+            self._variables.append(Variable(name))
+            return self._variables[-1]
 
     def getvar(self, name: str) -> 'Variable':
-        for var in self.variables:
+        for var in self._variables:
             if(name == var.getname()):
                 return var
 
         exit_error(f'Variable "{name}" is not defined (F)', 54)
 
     def isdefined(self, name: str) -> 'bool':
-        for var in self.variables:
+        for var in self._variables:
             if(name == var.getname()):
                 return var.defined()
         return False
@@ -120,16 +120,16 @@ class clabel:
 class Memory:
     def __init__(self, input: 'TextIO'):
         # Memory frames
-        self.gf: 'Frame' = Frame()
+        self._gf: 'Frame' = Frame()
         self._tf: 'Frame|None' = None
-        self.lf: 'Stack[Frame]' = Stack()
 
         # Stacks
-        self.return_stack: 'Stack[int]' = Stack()
-        self.data_stack: 'Stack[tuple[str,str]]' = Stack()
+        self._lf: 'Stack[Frame]' = Stack()
+        self._data_stack: 'Stack[tuple[str,str]]' = Stack()
+        self._return_stack: 'Stack[int]' = Stack()
 
         # Labels
-        self.labels: 'list[clabel]' = []
+        self._labels: 'list[clabel]' = []
 
         # Index of the next instruction
         self.index: 'int' = 0
@@ -139,88 +139,111 @@ class Memory:
 
     def __str__(self) -> str:
         lines = f'index:{self.index}\n'
-        lines += f'GF:\n{self.gf}\n'
+        lines += f'GF:\n{self._gf}\n'
         if(self._tf is None):
             lines += f'TF:none\n'
         else:
             lines += f'TF:\n{self._tf}\n'
-        lines += f'LF:\n{self.lf}\n'
-        lines += f'Stack:\n{self.data_stack}\n'
-        lines += f'Labels:\n{self.labels}\n'
+        lines += f'LF:\n{self._lf}\n'
+        lines += f'Stack:\n{self._data_stack}\n'
+        lines += f'Labels:\n{self._labels}\n'
         return lines
 
+    # basic operations
+    def inccounter(self):
+        self.index += 1
+
+    def getinput(self) -> 'str':
+        line = self._input.readline()
+        line = line.rstrip()
+        return line
+
+    # data stack operations
+    def data_push(self, type: 'str', value: 'str'):
+        self._data_stack.push((type, value))
+
+    def data_pop(self) -> 'tuple[str,str]':
+        return self._data_stack.pop()
+
+    # return stack operations
+    def return_push(self, value: 'int'):
+        self._return_stack.push(value)
+
+    def return_pop(self) -> 'int':
+        return self._return_stack.pop()
+
+    # frame data operations
     def defvar(self, frame: 'str', name: 'str'):
         if(frame == 'GF'):
-            self.gf.createvar(name)
+            self._gf.createvar(name)
         elif(frame == 'TF'):
             if(self._tf is None):
                 exit_error(f'Frame "TF" is not defined', 55)
             self._tf.createvar(name)
         elif(frame == 'LF'):
-            self.lf.top().createvar(name)
+            self._lf.top().createvar(name)
         else:
             exit_error(f'Invalid frame "{frame}"', 55)
 
     def isdefined(self, frame: 'str', name: 'str') -> 'bool':
         if(frame == 'GF'):
-            return self.gf.isdefined(name)
+            return self._gf.isdefined(name)
         elif(frame == 'TF'):
             if(self._tf is None):
                 exit_error(f'Frame "TF" is not defined', 55)
             return self._tf.isdefined(name)
         elif(frame == 'LF'):
-            return self.lf.top().isdefined(name)
+            return self._lf.top().isdefined(name)
         else:
             exit_error(f'Invalid frame "{frame}"', 55)
 
     def getvar(self, frame: 'str', name: 'str') -> 'tuple[str,str]':
         if(frame == 'GF'):
-            var = self.gf.getvar(name)
+            var = self._gf.getvar(name)
         elif(frame == 'TF'):
             if (self._tf is None):
                 exit_error(f'Frame "TF" is not defined', 55)
             var = self._tf.getvar(name)
         elif(frame == 'LF'):
-            var = self.lf.top().getvar(name)
+            var = self._lf.top().getvar(name)
         else:
             exit_error(f'Invalid frame "{frame}"', 55)
         return var.gettype(), var.getvalue()
 
     def setvalue(self, frame: 'str', name: 'str', type: 'str', value: 'str'):
         if(frame == 'GF'):
-            var = self.gf.getvar(name)
+            var = self._gf.getvar(name)
         elif(frame == 'TF'):
             if (self._tf is None):
                 exit_error(f'Frame "TF" is not defined', 55)
             var = self._tf.getvar(name)
         elif(frame == 'LF'):
-            var = self.lf.top().getvar(name)
+            var = self._lf.top().getvar(name)
         else:
             exit_error(f'Invalid frame "{frame}"', 55)
         var.setvalue(value, type)
 
+    # frame operations
     def createframe(self):
         self._tf = Frame()
 
     def pushframe(self):
         if(self._tf is None):
             exit_error(f'Frame "TF" is not defined', 55)
-        self.lf.push(self._tf)
+        self._lf.push(self._tf)
         self._tf = None
 
     def popframe(self):
-        self._tf = self.lf.pop()
+        self._tf = self._lf.pop()
 
-    def inccounter(self):
-        self.index += 1
-
+    # label operations
     def setlabel(self, name: str, pos: int):
-        if(name in self.labels):
+        if(name in self._labels):
             exit_error(f'Label "{name}" was already defined', 52)
-        self.labels.append(clabel(name, pos))
+        self._labels.append(clabel(name, pos))
 
     def _getlabel(self, name: str) -> 'clabel':
-        for label in self.labels:
+        for label in self._labels:
             if(label == name):
                 return label
         else:
@@ -228,11 +251,6 @@ class Memory:
 
     def jump(self, label: 'str'):
         self.index = self._getlabel(label).getpos()
-
-    def getinput(self) -> 'str':
-        line = self._input.readline()
-        line = line.rstrip()
-        return line
 
 
 if __name__ == "__main__":

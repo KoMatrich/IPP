@@ -114,9 +114,6 @@ $builder = new Builder($output);
 $correct = $files = open($dir, $recursive);
 $count = count($files);
 
-$run_out = array();
-$run_rc = 0;
-
 if (!$int_only) {//run paser
     $index = 0;
     $done_ok = 0;
@@ -127,8 +124,10 @@ if (!$int_only) {//run paser
         $index++;
 
         get_paths($test, $out, $rc);
+        $run_out = array();
+        $run_rc = -1;
 
-        exec("cat $test.src | php $parser 2>$test$p_err", $run_out, $run_rc);
+        exec("cat $test.src | php8.1 $parser 2>$test$p_err", $run_out, $run_rc);
 
         write_tmp_file($test.$p_out, implode("\n", $run_out));
         write_tmp_file($test.$p_rc, $run_rc);
@@ -166,10 +165,11 @@ if (!$int_only) {//run paser
         if(!$no_clean){
             if (file_exists($test.$i_err))
                 unlink($test.$i_err);
-            if (file_exists($test.$p_out))
-                unlink($test.$p_out);
             if (file_exists($test.$p_rc))
                 unlink($test.$p_rc);
+            if($parser_only)
+                if (file_exists($test.$p_out))
+                    unlink($test.$p_out);
         }
     }
     $builder->end_section();
@@ -185,6 +185,8 @@ if (!$parser_only) {//run interpreter
         $index++;
 
         get_paths($test, $out, $rc);
+        $run_out = array();
+        $run_rc = -1;
 
         if ($int_only)
             exec("python3 $interpreter --input=\"$test.in\" --source=\"$test.src\" 2>$test$i_err", $run_out, $run_rc);
@@ -217,6 +219,8 @@ if (!$parser_only) {//run interpreter
                 unlink($test.$i_out);
             if (file_exists($test.$i_rc))
                 unlink($test.$i_rc);
+            if (file_exists($test.$p_out))
+                unlink($test.$p_out);
         }
     }
     $builder->end_section();

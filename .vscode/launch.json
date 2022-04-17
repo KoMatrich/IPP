@@ -12,7 +12,20 @@
     ],
     "configurations": [
         {
-            "name": "PHP: test.php",
+            "name": "Python: interpret.py",
+            "type": "python",
+            "request": "launch",
+            "program": "interpret.py",
+            "cwd": "${workspaceFolder}/src",
+            "args": [
+                "--source=./Testy/interpret-only/${input:promptPath}.src",
+                "--input=./Testy/interpret-only/${input:promptPath}.in"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "PHP: test.php interpret only",
             "type": "php",
             "request": "launch",
             "program": "${workspaceFolder}/src/test.php",
@@ -29,17 +42,38 @@
             ["-r","-d=Testy/interpret-only","-io"]
         },
         {
-            "name": "Python: interpret.py",
-            "type": "python",
+            "name": "PHP: test.php parser only",
+            "type": "php",
             "request": "launch",
-            "program": "interpret.py",
+            "program": "${workspaceFolder}/src/test.php",
             "cwd": "${workspaceFolder}/src",
-            "args": [
-                "--source=./Testy/interpret-only/${input:promptPath}.src",
-                "--input=./Testy/interpret-only/${input:promptPath}.in"
+            "port": 0,
+            "runtimeArgs": [
+                "-dxdebug.start_with_request=yes"
             ],
-            "console": "integratedTerminal",
-            "justMyCode": true
+            "env": {
+                "XDEBUG_MODE": "debug,develop",
+                "XDEBUG_CONFIG": "client_port=${port}"
+            },
+            "args":
+            ["-r","-d=Testy/parse-only","-po"]
+        },
+        {
+            "name": "PHP: test.php both",
+            "type": "php",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/test.php",
+            "cwd": "${workspaceFolder}/src",
+            "port": 0,
+            "runtimeArgs": [
+                "-dxdebug.start_with_request=yes"
+            ],
+            "env": {
+                "XDEBUG_MODE": "debug,develop",
+                "XDEBUG_CONFIG": "client_port=${port}"
+            },
+            "args":
+            ["-r","-d=Testy/both"]
         }
     ]
 
