@@ -113,8 +113,6 @@ $builder = new Builder($output);
 
 $correct = $files = open($dir, $recursive);
 $count = count($files);
-if(!$parser_only && !$int_only)
-    $count*=2;
 
 if (!$int_only) {//run paser
     $index = 0;
@@ -141,23 +139,21 @@ if (!$int_only) {//run paser
             }
 
             ///@TODO use JExamXML
-            exec("diff -w -B -q $test$p_out $test$p_out", $_, $return_code);
+            exec("diff -w -B -q $test.out $test$p_out", $_, $return_code);
             if ($return_code != 0) {
                 $builder->add_error($test, "output is not equal to preset");
                 goto clean_parser_tmp;
             }
         } else {
             if ($rc != 0) {
-                $builder->add_error($test, "return code \"$run_rc\" is not equal to \"$rc\"");
+                $builder->add_error($test, "parser failed with return code \"$run_rc\"");
                 unset($correct[$index - 1]);
+                //failed to parse remove test for interpreter
                 goto clean_parser_tmp;
             }
 
-            exec("diff -w -B -q $test$p_out $test$p_out", $_, $return_code);
-            if ($return_code != 0) {
-                $builder->add_error($test, "output is not equal to preset");
-                goto clean_parser_tmp;
-            }
+            //no output check file
+            //goes directly to interpreter
         }
 
         $done_ok++;
@@ -205,7 +201,7 @@ if (!$parser_only) {//run interpreter
             goto clean_interpret_tmp;
         }
 
-        exec("diff -w -B -q $test$i_out $test$i_out", $_, $return_code);
+        exec("diff -w -B -q $test.out $test$i_out", $_, $return_code);
         if ($return_code != 0) {
             $builder->add_error($test, "output is not equal to preset");
             goto clean_interpret_tmp;
@@ -233,6 +229,10 @@ if (!$parser_only) {//run interpreter
 }
 
 $mode = $parser_only || $int_only ? ($int_only ? 'Interpret only': 'Parser only') : 'Parser and Interpreter';
+
+if(!$parser_only && !$int_only)
+    $done_ok/=2;
+
 $builder->build($mode,$count,$done_ok);
 fclose($output);
 
