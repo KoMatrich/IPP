@@ -133,6 +133,7 @@ class Memory:
 
         # Input file/stream
         self._input: 'TextIO' = input
+        self._eof = False
 
     def __str__(self) -> str:
         lines = f'index:{self.index}\n'
@@ -152,8 +153,13 @@ class Memory:
 
     def getinput(self) -> 'str':
         line = self._input.readline()
+        if(len(line) == 0):
+            self._eof = True
         line = line.rstrip()
         return line
+
+    def endoffile(self) -> bool:
+        return self._eof
 
     # data stack operations
     def data_push(self, type: 'str', value: 'str'):

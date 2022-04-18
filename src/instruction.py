@@ -330,7 +330,7 @@ class Instruction(object):
             exit_error(f'"{self.opcode}" argument 3 is not type of int', 53)
         if(int(var2) == 0):
             exit_error('Division by zero', 57)
-        self.setval(memory, 0, 'int', str(int(var1) / int(var2)))
+        self.setval(memory, 0, 'int', str(int(int(var1) / int(var2))))
     ############################################################################
 
     ############################################################################
@@ -350,10 +350,10 @@ class Instruction(object):
         type2, var2 = self.getvar(memory, 2)
         if(type1 != type2):
             exit_error('Argument 1 and 2 are not of same type', 32)
-        if(var1 < var2):
-            self.setval(memory, 0, 'bool', 'true')
+        if(type1 == 'int'):
+            self.setval(memory, 0, 'bool', str(int(var1) < int(var2)).lower())
         else:
-            self.setval(memory, 0, 'bool', 'false')
+            self.setval(memory, 0, 'bool', str(var1 < var2).lower())
     ############################################################################
 
     def _case_gt_check_args(self):
@@ -364,10 +364,10 @@ class Instruction(object):
         type2, var2 = self.getvar(memory, 2)
         if(type1 != type2):
             exit_error('Argument 1 and 2 are not of same type', 32)
-        if(var1 > var2):
-            self.setval(memory, 0, 'bool', 'true')
+        if(type1 == 'int'):
+            self.setval(memory, 0, 'bool', str(int(var1) > int(var2)).lower())
         else:
-            self.setval(memory, 0, 'bool', 'false')
+            self.setval(memory, 0, 'bool', str(var1 > var2).lower())
     ############################################################################
 
     def _case_eq_check_args(self):
@@ -458,7 +458,7 @@ class Instruction(object):
         except(ValueError):
             exit_error(
                 f'"{self.opcode}" argument 1 cant be converted to char', 58)
-        self.setval(memory, 0, 'char', out)
+        self.setval(memory, 0, 'string', out)
 
     def _case_stri2int_check_args(self):
         self.check_number_args(3)
@@ -495,21 +495,15 @@ class Instruction(object):
         type = self.args[1].content
 
         try:
+            if(memory.endoffile()):
+                raise ValueError
+
             if(type == 'int'):
                 val = str(int(line))
             elif(type == 'string'):
-                if(len(line) == 0):
-                    raise ValueError
                 val = line
             elif(type == 'bool'):
-                if(line.lower() == 'true'):
-                    val = 'true'
-                elif(line.lower() == 'false'):
-                    val = 'false'
-                else:
-                    raise ValueError
-            elif(type == 'nil'):
-                val = 'nil'
+                val = str(line.lower() == 'true').lower()
             else:
                 exit_error(
                     f'"type" defined in argument 2 is not valid type', 32)
