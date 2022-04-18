@@ -114,8 +114,12 @@ def main(argv: 'list[str]'):
         if opt in ("--help"):
             print_help()
         elif opt in ("--source"):
+            if(sourcefile != ''):
+                exit_error('--source argument is already used', 10)
             sourcefile = arg
         elif opt in ("--input"):
+            if(inputfile != ''):
+                exit_error('--input argument is already used', 10)
             inputfile = arg
 
     if(len(args) > 0):
