@@ -16,7 +16,7 @@ $interpreter = "interpret.py";
 $parser_only = false;
 $int_only = false;
 //default jexamxml path
-$jexampath = "/pub/courses/ipp/jexamxml/";
+$jexampath = "/pub/courses/ipp/jexamxml";
 //no clean tmp files
 $no_clean = false;
 
@@ -64,11 +64,11 @@ for($index = 1; $index < $argc; $index++) {
             break;
         case "-ps":
         case "--parse-script":
-                $parser = getarg($index,$varg,$value);
+            $parser = getarg($index,$varg,$value);
             break;
         case "-is":
         case "--int-script":
-                $interpreter = getarg($index,$varg,$value);
+            $interpreter = getarg($index,$varg,$value);
             break;
         case "-po":
         case "--parser-only":
@@ -80,7 +80,7 @@ for($index = 1; $index < $argc; $index++) {
             break;
         case "-jp":
         case "--jexampath":
-                $jexampath = getarg($index,$varg,$value);
+            $jexampath = getarg($index,$varg,$value);
             break;
         case "-nc":
         case "--no-clean":
@@ -95,17 +95,23 @@ for($index = 1; $index < $argc; $index++) {
 }
 
 //check for conflicting options
+// @TODO add more options
 if($parser_only && $int_only)
     error(10, "parser-only and int-only options are mutually exclusive");
 
 //checks if parser exists
-if (!$int_only)
+if (!$int_only){
     file_exists($parser) or error(11, "parser script \"$parser\" doesn't exist");
+    if($parser_only){
+        file_exists($jexampath) or error(11, "jexamxml path \"$jexampath\" doesn't exist");
+        file_exists("$jexampath/jexamxml.jar") or error(11, "jexamxml.jar file doesn't exist");
+    }
+}
 
 //checks if interpreter exists
-if (!$parser_only)
+if (!$parser_only){
     file_exists($interpreter) or error(11, "interpreter script \"$interpreter\" doesn't exist");
-
+}
 //gets all test files
 $output = fopen('index.html', 'w') or error(12, "can't create file \"+index.html+\"");
 
@@ -138,17 +144,26 @@ if (!$int_only) {//run paser
                 goto clean_parser_tmp;
             }
 
-            ///@TODO use JExamXML
-            exec("diff -w -B -q $test.out $test$p_out", $_, $return_code);
-            if ($return_code != 0) {
-                $builder->add_error($test, "output is not equal to preset");
+            // check output with jexamxml
+            exec("java -jar $jexampath/jexamxml.jar $test.out $test$p_out $jexampath/options", $run_out, $run_rc);
+            if($run_rc != 0){
+                if($run_rc == 1)
+                    $builder->add_error($test, "jexamxml error: there are some different elements in output");
+                elseif($run_rc == 2)
+                    $builder->add_error($test, "jexamxml error: there are some deleted elements in output");
+                elseif($run_rc == 4)
+                    error(11, "jexamxml error: options file doesn't exist or is incorect");
+                elseif($run_rc == 6)
+                    $builder->add_error($test, "jexamxml error: output file is not correctly formatted");
+                else
+                    error(99, "jexamxml error: return code is $run_rc");
                 goto clean_parser_tmp;
             }
         } else {
             if ($rc != 0) {
                 $builder->add_error($test, "parser failed with return code \"$run_rc\"");
-                unset($correct[$index - 1]);
                 //failed to parse remove test for interpreter
+                unset($correct[$index - 1]);
                 goto clean_parser_tmp;
             }
 

@@ -29,12 +29,19 @@
                 '%MODE%' => $mode,
                 '%COUNT%' => $count,
                 '%DONE_OK%' => $done_ok,
-                '%DONE_PER%' => round($done_ok / $count * 100, 2),
+                '%DONE_PER%' => $this->precent($done_ok, $count),
                 '%BODY%' => $this->body
                 ));
 
                 fwrite($this->output, $tmp);
             }
+        }
+
+        private function precent($done, $count)
+        {
+            if($count == 0)
+                return 100;
+            return round($done / $count * 100, 2);
         }
 
         private function write($str)

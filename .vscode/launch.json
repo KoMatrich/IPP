@@ -56,7 +56,7 @@
                 "XDEBUG_CONFIG": "client_port=${port}"
             },
             "args":
-            ["-r","-d=Testy/parse-only","-po"]
+            ["--jexampath=jexamxml","-po"]
         },
         {
             "name": "PHP: test.php both",
