@@ -672,19 +672,19 @@ class Instruction(object):
         self.check_types(2, symb)
 
     def _case_jumpifneq_run(self, memory: 'Memory'):
-        type1, var1 = self.getvar(memory, 0)
-        type2, var2 = self.getvar(memory, 1)
+        type1, var1 = self.getvar(memory, 1)
+        type2, var2 = self.getvar(memory, 2)
 
-        # NOTE if type nill, it will be treated as false
-        # there for wont jump
         if(type1 != type2):
             if(type1 != 'nil') and (type2 != 'nil'):
                 exit_error(
                     f'"{self.opcode}" argument 1 and 2 are not same types "{type1}" != "{type2}"', 32)
         else:
-            if(var1 != var2):
-                _, var = self.getvar(memory, 0)
-                memory.jump(var)
+            if(var1 == var2):
+                return
+
+        _, var = self.getvar(memory, 0)
+        memory.jump(var)
     ############################################################################
 
     def _case_exit_check_args(self):
