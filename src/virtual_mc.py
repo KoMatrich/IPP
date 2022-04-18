@@ -1,7 +1,7 @@
 from typing import Generic, TextIO, TypeVar
 from common import *
 
-
+# definition of memory variable
 class Variable:
     def __init__(self, name: str):
         self._name = name
@@ -65,8 +65,6 @@ class Frame:
 
 
 T = TypeVar('T')
-
-
 class Stack(Generic[T]):
     def __init__(self):
         self._stack: 'list[T]' = []

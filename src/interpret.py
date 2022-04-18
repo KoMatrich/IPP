@@ -10,7 +10,7 @@ from common import *
 from virtual_mc import *
 from instruction import *
 
-
+# opens file and returns it's content
 def open_file(filepath: 'str'):
     if(filepath != ''):
         try:
@@ -23,7 +23,7 @@ def open_file(filepath: 'str'):
         input = sys.stdin
     return input
 
-
+# from input string creates xml tree
 def get_xml(sourcefile: 'str'):
     try:
         if(sourcefile != ''):
@@ -38,7 +38,7 @@ def get_xml(sourcefile: 'str'):
         exit_error(f'{e}', 99)
     return xml_tree.getroot()
 
-
+# checks instruction tag and order and returns instruction order
 def xml_instruction_order(instruction: 'ET.Element'):
     if(instruction.tag != 'instruction'):
         exit_error(f'{instruction.tag} tag is not instruction', 32)
@@ -55,7 +55,7 @@ def xml_instruction_order(instruction: 'ET.Element'):
             f'Instruction "{instruction.tag}" order "{index}" is negative number', 32)
     return int(instruction.attrib["order"])
 
-
+# returns sorted instructions by order from xml tree
 def get_instructions(xml_tree: 'ET.Element'):
     sorted_inst = sorted(xml_tree, key=xml_instruction_order)
     index_list: 'list[str]' = []
@@ -72,7 +72,7 @@ def get_instructions(xml_tree: 'ET.Element'):
         instuctions.append(Instruction(inst))
     return instuctions
 
-
+# add labels to memory
 def addlabels(memory: 'Memory', instructions: 'list[Instruction]'):
     memory.index = 0
     for inst in instructions:
@@ -80,7 +80,7 @@ def addlabels(memory: 'Memory', instructions: 'list[Instruction]'):
             inst.run(memory)
         memory.inccounter()
 
-
+# runs whole program
 def run(xml_tree: 'ET.Element', input: 'TextIO'):
     if(xml_tree.tag != 'program'):
         exit_error('root tag is not program', 32)

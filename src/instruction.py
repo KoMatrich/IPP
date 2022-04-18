@@ -52,7 +52,7 @@ class Argument:
 
             elif(self.type == 'type'):
                 self.content = self.content.lower()
-                if(self.content not in var_types):
+                if(self.content not in VAR_T):
                     exit_error(
                         f'Argument "{arg.tag}" type has invalid value "{self.content}"', 32)
 
@@ -66,6 +66,24 @@ class Argument:
             else:
                 exit_error(
                     f'Argument "{arg.tag}" has invalid type "{self.type}"', 32)
+
+    def gettype(self):
+        return self.type
+
+    def getframe(self):
+        if(self.frame is None):
+            exit_error('Use of constant as variable in instruction', 99)
+        return self.frame
+
+    def getname(self):
+        if(self.name is None):
+            exit_error('Use of constant as variable in instruction',99)
+        return self.name
+
+    def getcontent(self):
+        if(self.content is None):
+            exit_error('Use of variable as constant value',99)
+        return self.content
 
 
 class Instruction(object):
@@ -191,7 +209,7 @@ class Instruction(object):
     def check_types(self, arg_index: 'int', types: 'list[str]'):
         if not (self.args[arg_index].type in types):
             exit_error(
-                f'Instruction {self.opcode} arg{arg_index} is not of type of {symb}', 53)
+                f'Instruction {self.opcode} arg{arg_index} is not of type of {SYMB}', 53)
 
     ############################################################################
     # Instructions implementations
@@ -199,7 +217,7 @@ class Instruction(object):
     def _case_move_check_args(self):
         self.check_number_args(2)
         self.check_type(0, 'var')
-        self.check_types(1, symb)
+        self.check_types(1, SYMB)
 
     def _case_move_run(self, memory: 'Memory'):
         type, var = self.getvar(memory, 1)
@@ -254,7 +272,7 @@ class Instruction(object):
 
     def _case_pushs_check_args(self):
         self.check_number_args(1)
-        self.check_types(0, symb)
+        self.check_types(0, SYMB)
 
     def _case_pushs_run(self, memory: 'Memory'):
         type, var = self.getvar(memory, 0)
@@ -275,8 +293,8 @@ class Instruction(object):
     def _check_arithmetic_args(self):
         self.check_number_args(3)
         self.check_type(0, 'var')
-        self.check_types(1, symb_num)
-        self.check_types(2, symb_num)
+        self.check_types(1, SYMB_INT)
+        self.check_types(2, SYMB_INT)
     ############################################################################
 
     def _case_add_check_args(self):
@@ -338,8 +356,8 @@ class Instruction(object):
     def _check_compare_args(self):
         self.check_number_args(3)
         self.check_type(0, 'var')
-        self.check_types(1, symb)
-        self.check_types(2, symb)
+        self.check_types(1, SYMB)
+        self.check_types(2, SYMB)
     ############################################################################
 
     def _case_lt_check_args(self):
@@ -392,8 +410,8 @@ class Instruction(object):
     def _check_bool_args(self):
         self.check_number_args(3)
         self.check_type(0, 'var')
-        self.check_types(1, symb_bool)
-        self.check_types(2, symb_bool)
+        self.check_types(1, SYMB_BOOL)
+        self.check_types(2, SYMB_BOOL)
     ############################################################################
 
     def _case_and_check_args(self):
@@ -431,7 +449,7 @@ class Instruction(object):
     def _case_not_check_args(self):
         self.check_number_args(2)
         self.check_type(0, 'var')
-        self.check_types(1, symb_bool)
+        self.check_types(1, SYMB_BOOL)
 
     def _case_not_run(self, memory: 'Memory'):
         type, var = self.getvar(memory, 1)
@@ -447,7 +465,7 @@ class Instruction(object):
     def _case_int2char_check_args(self):
         self.check_number_args(2)
         self.check_type(0, 'var')
-        self.check_types(1, symb)
+        self.check_types(1, SYMB)
 
     def _case_int2char_run(self, memory: 'Memory'):
         type, var = self.getvar(memory, 1)
@@ -463,8 +481,8 @@ class Instruction(object):
     def _case_stri2int_check_args(self):
         self.check_number_args(3)
         self.check_type(0, 'var')
-        self.check_types(1, symb)
-        self.check_types(2, symb)
+        self.check_types(1, SYMB)
+        self.check_types(2, SYMB)
 
     def _case_stri2int_run(self, memory: 'Memory'):
         type1, var1 = self.getvar(memory, 1)
@@ -515,8 +533,8 @@ class Instruction(object):
 
     def _case_write_check_args(self):
         self.check_number_args(1)
-        if(self.args[0].type not in symb):
-            exit_error(f'"{self.opcode}" argument 1 is not type of {symb}', 32)
+        if(self.args[0].type not in SYMB):
+            exit_error(f'"{self.opcode}" argument 1 is not type of {SYMB}', 32)
 
     def _case_write_run(self, memory: 'Memory'):
         type, var = self.getvar(memory, 0)
@@ -531,8 +549,8 @@ class Instruction(object):
     def _case_concat_check_args(self):
         self.check_number_args(3)
         self.check_type(0, 'var')
-        self.check_types(1, symb_string)
-        self.check_types(2, symb_string)
+        self.check_types(1, SYMB_STRING)
+        self.check_types(2, SYMB_STRING)
 
     def _case_concat_run(self, memory: 'Memory'):
         type1, var1 = self.getvar(memory, 1)
@@ -549,7 +567,7 @@ class Instruction(object):
     def _case_strlen_check_args(self):
         self.check_number_args(2)
         self.check_type(0, 'var')
-        self.check_types(1, symb_string)
+        self.check_types(1, SYMB_STRING)
 
     def _case_strlen_run(self, memory: 'Memory'):
         type1, var1 = self.getvar(memory, 1)
@@ -563,8 +581,8 @@ class Instruction(object):
     def _case_getchar_check_args(self):
         self.check_number_args(3)
         self.check_type(0, 'var')
-        self.check_types(1, symb_string)
-        self.check_types(2, symb_num)
+        self.check_types(1, SYMB_STRING)
+        self.check_types(2, SYMB_INT)
 
     def _case_getchar_run(self, memory: 'Memory'):
         type1, var1 = self.getvar(memory, 1)
@@ -584,8 +602,8 @@ class Instruction(object):
     def _case_setchar_check_args(self):
         self.check_number_args(3)
         self.check_type(0, 'var')
-        self.check_types(1, symb_num)
-        self.check_types(2, symb_string)
+        self.check_types(1, SYMB_INT)
+        self.check_types(2, SYMB_STRING)
 
     def _case_setchar_run(self, memory: 'Memory'):
         type, var = self.getvar(memory, 0)
@@ -619,7 +637,7 @@ class Instruction(object):
     def _case_type_check_args(self):
         self.check_number_args(2)
         self.check_type(0, 'var')
-        self.check_types(1, symb)
+        self.check_types(1, SYMB)
 
     def _case_type_run(self, memory: 'Memory'):
         if(self.args[1].type == 'var'):
@@ -653,8 +671,8 @@ class Instruction(object):
     def _case_jumpifeq_check_args(self):
         self.check_number_args(3)
         self.check_type(0, 'label')
-        self.check_types(1, symb)
-        self.check_types(2, symb)
+        self.check_types(1, SYMB)
+        self.check_types(2, SYMB)
 
     def _case_jumpifeq_run(self, memory: 'Memory'):
         type1, var1 = self.getvar(memory, 1)
@@ -673,8 +691,8 @@ class Instruction(object):
     def _case_jumpifneq_check_args(self):
         self.check_number_args(3)
         self.check_type(0, 'label')
-        self.check_types(1, symb)
-        self.check_types(2, symb)
+        self.check_types(1, SYMB)
+        self.check_types(2, SYMB)
 
     def _case_jumpifneq_run(self, memory: 'Memory'):
         type1, var1 = self.getvar(memory, 1)
@@ -694,7 +712,7 @@ class Instruction(object):
 
     def _case_exit_check_args(self):
         self.check_number_args(1)
-        self.check_types(0, symb_num)
+        self.check_types(0, SYMB_INT)
 
     def _case_exit_run(self, memory: 'Memory'):
         type1, var1 = self.getvar(memory, 0)
@@ -711,7 +729,7 @@ class Instruction(object):
     ###############################################################################
     def _case_dprint_check_args(self):
         self.check_number_args(1)
-        self.check_types(0, symb)
+        self.check_types(0, SYMB)
 
     def _case_dprint_run(self, memory: 'Memory'):
         _, val = self.getvar(memory, 0)

@@ -31,13 +31,13 @@ def isInt(s: str):
         exit_error(f'{e}', 99)
 
 
-numeric_types = ['int']
-var_types = numeric_types + ['bool', 'string', 'nil']
+NUMERIC_T = ['int']
+VAR_T = NUMERIC_T + ['bool', 'string', 'nil']
 
-symb_string = ['var', 'string']
-symb_bool = ['var', 'bool']
-symb_num = ['var'] + numeric_types
-symb = ['var'] + var_types
+SYMB_STRING = ['var', 'string']
+SYMB_BOOL = ['var', 'bool']
+SYMB_INT = ['var'] + NUMERIC_T
+SYMB = ['var'] + VAR_T
 
 if __name__ == "__main__":
     exit_error('This file is not meant to be run directly', 99)
