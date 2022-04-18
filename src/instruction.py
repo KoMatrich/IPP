@@ -475,21 +475,29 @@ class Instruction(object):
         line = memory.getinput()
         type = self.args[1].content
 
-        # TODO fix Testy/both/read/read_badval
+        try:
+            if(type == 'int'):
+                val = str(int(line))
+            elif(type == 'string'):
+                if(len(line) == 0):
+                    raise ValueError
+                val = line
+            elif(type == 'bool'):
+                if(line.lower() == 'true'):
+                    val = 'true'
+                elif(line.lower() == 'false'):
+                    val = 'false'
+                else:
+                    raise ValueError
+            elif(type == 'nil'):
+                val = 'nil'
+            else:
+                exit_error(
+                    f'"type" defined in argument 2 is not valid type', 32)
 
-        if(type == 'int'):
-            val = str(int(line))
-        elif(type == 'string'):
-            val = line
-        elif(type == 'bool'):
-            val = str(bool(line)).lower()
-        elif(type == 'nil'):
-            val = 'nil'
-        else:
-            exit_error(f'"type" defined in argument 2 is not valid type', 32)
-
-        # TODO line format check for string
-        self.setval(memory, 0, type, val)
+            self.setval(memory, 0, type, val)
+        except(ValueError):
+            self.setval(memory, 0, 'nil', 'nil')
     ############################################################################
 
     def _case_write_check_args(self):
@@ -498,10 +506,10 @@ class Instruction(object):
             exit_error(f'"{self.opcode}" argument 1 is not type of {symb}', 32)
 
     def _case_write_run(self, memory: 'Memory'):
-        if(self.args[0].type == 'nil'):
+        type, var = self.getvar(memory, 0)
+        if(type == 'nil'):
             print('', end='')
         else:
-            _, var = self.getvar(memory, 0)
             print(var, end='')
 
     ############################################################################

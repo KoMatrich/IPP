@@ -14,11 +14,8 @@ class Variable:
         return f'{self._type} "{self._name}"="{self._value}"'
 
     def setvalue(self, type: 'str', value: 'str'):
-        if self._type == 'nil':
-            self._value = 'nil'
-        else:
-            self._value = value
-            self._type = type
+        self._value = value
+        self._type = type
 
     def getname(self) -> 'str':
         return self._name
