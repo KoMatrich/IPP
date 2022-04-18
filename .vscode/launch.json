@@ -73,7 +73,7 @@
                 "XDEBUG_CONFIG": "client_port=${port}"
             },
             "args":
-            ["-r","-d=Testy/both","-nc"]
+            ["-r","-d=Testy/both"]
         }
     ]
 

@@ -8,82 +8,78 @@ from virtual_mc import *
 
 class Argument:
     def __init__(self, arg: 'ET.Element'):
-        self.type = arg.get('type')
-        if(self.type is None):
+        self._type = arg.get('type') or ''
+        if(self._type is ''):
             exit_error(f'Argument "{arg.tag}" has no type', 32)
 
-        self.type = self.type.lower()
+        self._type = self._type.lower()
 
         if(arg.text is None):
-            if(self.type == 'string'):
+            if(self._type == 'string'):
                 arg.text = ''
             else:
                 exit_error(f'Argument "{arg.tag}" has no value', 32)
 
-        if(self.type == 'var'):
-            self.frame = arg.text[:2]
-            if(self.frame not in ['GF', 'LF', 'TF']):
+        if(self._type == 'var'):
+            self._frame = arg.text[:2]
+            if(self._frame not in ['GF', 'LF', 'TF']):
                 exit_error(
-                    f'Argument "{arg.tag}" has invalid frame "{self.frame}"', 32)
+                    f'Argument "{arg.tag}" has invalid frame "{self._frame}"', 32)
 
-            self.name = arg.text[3:]
+            self._name = arg.text[3:]
 
-            if(self.name == ''):
+            if(self._name == ''):
                 exit_error(f'Argument "{arg.tag}" has no name', 32)
         else:
-            self.content = arg.text
+            self._content = arg.text
 
-            if(self.type == 'int'):
-                if isInt(self.content):
-                    self.content = self.content
+            if(self._type == 'int'):
+                if isInt(self._content):
+                    self._content = self._content
                 else:
                     exit_error(
-                        f'Argument "{arg.tag}" of type "{self.type}" has invalid value "{self.content}"', 32)
+                        f'Argument "{arg.tag}" of type "{self._type}" has invalid value "{self._content}"', 32)
 
-            elif(self.type == 'bool'):
-                if(self.content in ['true', 'false']):
-                    self.content = self.content
+            elif(self._type == 'bool'):
+                if(self._content in ['true', 'false']):
+                    self._content = self._content
                 else:
                     exit_error(
-                        f'Argument "{arg.tag}" of type "{self.type}" has invalid value "{self.content}"', 32)
+                        f'Argument "{arg.tag}" of type "{self._type}" has invalid value "{self._content}"', 32)
 
-            elif(self.type == 'string'):
-                self.content = self.content
+            elif(self._type == 'string'):
+                self._content = self._content
 
-            elif(self.type == 'type'):
-                self.content = self.content.lower()
-                if(self.content not in VAR_T):
+            elif(self._type == 'type'):
+                self._content = self._content.lower()
+                if(self._content not in VAR_T):
                     exit_error(
-                        f'Argument "{arg.tag}" type has invalid value "{self.content}"', 32)
+                        f'Argument "{arg.tag}" type has invalid value "{self._content}"', 32)
 
-            elif(self.type == 'label'):
-                if(self.content == ''):
+            elif(self._type == 'label'):
+                if(self._content == ''):
                     exit_error(f'Label "{arg.tag}" has no name', 32)
-            elif(self.type == 'nil'):
-                if(self.content != 'nil'):
+            elif(self._type == 'nil'):
+                if(self._content != 'nil'):
                     exit_error(
                         f'Argument "{arg.tag}" type nil can have only value of nil', 32)
             else:
                 exit_error(
-                    f'Argument "{arg.tag}" has invalid type "{self.type}"', 32)
+                    f'Argument "{arg.tag}" has invalid type "{self._type}"', 32)
 
-    def gettype(self):
-        return self.type
+    # returns type of
+    def gettype(self) -> str:
+        return self._type
 
-    def getframe(self):
-        if(self.frame is None):
-            exit_error('Use of constant as variable in instruction', 99)
-        return self.frame
+    # returns tuple[frame,name] of var
+    def getvar(self):
+        return self._frame, self._name
 
-    def getname(self):
-        if(self.name is None):
-            exit_error('Use of constant as variable in instruction',99)
-        return self.name
-
+    # returns content of constant
     def getcontent(self):
-        if(self.content is None):
-            exit_error('Use of variable as constant value',99)
-        return self.content
+        if(self._content is None):
+            exit_error('Use of variable as constant value', 99)
+        return self._content
 
 
 class Instruction(object):
@@ -92,6 +88,7 @@ class Instruction(object):
         if(self.opcode is None):
             exit_error('opcode is missing', 32)
         self.opcode = self.opcode.lower()
+        self.args: 'list[Argument]' = []
         self._set_args(instruction)
         self._check_args()
 
@@ -104,60 +101,8 @@ class Instruction(object):
             exit_error(f'{self.opcode} is not valid instruction', 32)
         method(memory)
 
-    # gets the value of an argument from memory
-    # or from the argument itself
-    def getvar(self, memory: 'Memory', arg_index: 'int') -> 'tuple[str, str]':
-        if(self.args[arg_index].type == 'var'):
-            type, var = memory.getvar(
-                self.args[arg_index].frame, self.args[arg_index].name)
-        else:
-            var = self.args[arg_index].content
-            type = self.args[arg_index].type
-            if(type is None):
-                exit_error('Invalid argument type', 32)
-            if(type == 'string'):
-                while(1):
-                    escapes = re.search(r'\\\d\d\d', var)
-                    if(escapes):
-                        # found escape sequence
-                        x = escapes.start()+1
-                        y = escapes.end()
-                        # int(var[x:y]) extracts the character number from the escape sequence
-                        # then converts it to the corresponding character
-                        try:
-                            var = re.sub(r'\\\d\d\d', chr(
-                                int(var[x:y])), var, 1)
-                        except ValueError:
-                            exit_error('Invalid escape sequence', 32)
-                    else:
-                        break
-
-        return type, var
-
-    # sets the value of an argument in memory
-    # protection against setting a value to constant
-    def setval(self, memory: 'Memory', arg_index: 'int', type: 'str', value: 'str'):
-        if(self.args[arg_index].type == 'var'):
-            memory.setvalue(self.args[arg_index].frame,
-                            self.args[arg_index].name, value, type)
-        else:
-            exit_error('cannot set value to non-variable argument', 32)
-
-    def isdefined(self, memory: 'Memory', arg_index: 'int') -> 'bool':
-        if(self.args[arg_index].type == 'var'):
-            return memory.isdefined(self.args[arg_index].frame, self.args[arg_index].name)
-        else:
-            return False
-
-    def isconst(self, arg_index: 'int') -> 'bool':
-        if(self.args[arg_index].type != 'var'):
-            return True
-        else:
-            return False
-
     # sets the arguments of the instruction and sorts them
     def _set_args(self, instruction: ET.Element):
-        self.args: 'list[Argument]' = []
         args = sorted(instruction, key=lambda x: x.tag[3:])
 
         index_list: 'list[str]' = []
@@ -188,7 +133,63 @@ class Instruction(object):
 
         self.args = [Argument(arg) for arg in args]
 
+    # inteligently gets value from arg or memory
+    def getvar(self, memory: 'Memory', arg_index: 'int') -> 'tuple[str, str]':
+        type = self.args[arg_index].gettype()
+        if(type == 'var'):
+            # memory variable
+            frame, name = self.args[arg_index].getvar()
+            # gets values from memory
+            type, var = memory.getvar(frame, name)
+        else:
+            # constant value
+            var = self.args[arg_index].getcontent()
+            if(type is None):
+                exit_error('Invalid argument type', 32)
+            if(type == 'string'):
+                # convert all escape sequences in string to chars
+                while(1):
+                    escapes = re.search(r'\\\d\d\d', var)
+                    if(escapes):
+                        # found escape sequence
+                        x = escapes.start()+1
+                        y = escapes.end()
+                        # int(var[x:y]) extracts the character number from the escape sequence
+                        # then converts it to the corresponding character
+                        try:
+                            var = re.sub(r'\\\d\d\d', chr(
+                                int(var[x:y])), var, 1)
+                        except ValueError:
+                            exit_error('Invalid escape sequence', 32)
+                    else:
+                        # no escape sequence
+                        break
+        return type, var
+
+    # sets the value of an argument in memory
+    # protection against setting a value to constant
+    def setval(self, memory: 'Memory', arg_index: 'int', type: 'str', value: 'str'):
+        if(self.args[arg_index].gettype() == 'var'):
+            frame, name = self.args[arg_index].getvar()
+            memory.setvalue(frame, name, value, type)
+        else:
+            exit_error('cannot set value to non-variable argument', 32)
+
+    def isdefined(self, memory: 'Memory', arg_index: 'int') -> 'bool':
+        if(self.args[arg_index].gettype() == 'var'):
+            frame, name = self.args[arg_index].getvar()
+            return memory.isdefined(frame, name)
+        else:
+            return False
+
+    def isconst(self, arg_index: 'int') -> 'bool':
+        if(self.args[arg_index].gettype() != 'var'):
+            return True
+        else:
+            return False
+
     # calls the correct argument check method for the opcode
+    # static check
     def _check_args(self):
         method_name = f'_case_{self.opcode}_check_args'
         check_args = getattr((self), method_name,
@@ -202,12 +203,12 @@ class Instruction(object):
                 f'{self.opcode} has {len(self.args)} arguments, but {arg_count} are required', 32)
 
     def check_type(self, arg_index: 'int', type: 'str'):
-        if self.args[arg_index].type != type:
+        if self.args[arg_index].gettype() != type:
             exit_error(
                 f'Instruction {self.opcode} arg{arg_index} is not of type "{type}"', 53)
 
     def check_types(self, arg_index: 'int', types: 'list[str]'):
-        if not (self.args[arg_index].type in types):
+        if not (self.args[arg_index].gettype() in types):
             exit_error(
                 f'Instruction {self.opcode} arg{arg_index} is not of type of {SYMB}', 53)
 
@@ -250,7 +251,8 @@ class Instruction(object):
         self.check_type(0, 'var')
 
     def _case_defvar_run(self, memory: 'Memory'):
-        memory.defvar(self.args[0].frame, self.args[0].name)
+        frame, name = self.args[0].getvar()
+        memory.defvar(frame, name)
     ############################################################################
 
     def _case_call_check_args(self):
@@ -259,7 +261,7 @@ class Instruction(object):
 
     def _case_call_run(self, memory: 'Memory'):
         memory.return_push(memory.index)
-        memory.jump(self.args[0].content)
+        memory.jump(self.args[0].getcontent())
     ############################################################################
 
     def _case_return_check_args(self):
@@ -503,37 +505,37 @@ class Instruction(object):
     ############################################################################
     def _case_read_check_args(self):
         self.check_number_args(2)
-        if(self.args[0].type != 'var'):
+        if(self.args[0].gettype() != 'var'):
             exit_error(f'"{self.opcode}" argument 1 is not type of var', 32)
-        if(self.args[1].type != 'type'):
+        if(self.args[1].gettype() != 'type'):
             exit_error(f'"{self.opcode}" argument 2 is not type of type', 32)
 
     def _case_read_run(self, memory: 'Memory'):
         line = memory.getinput()
-        type = self.args[1].content
+        input_type = self.args[1].getcontent()
 
         try:
             if(memory.endoffile()):
                 raise ValueError
 
-            if(type == 'int'):
+            if(input_type == 'int'):
                 val = str(int(line))
-            elif(type == 'string'):
+            elif(input_type == 'string'):
                 val = line
-            elif(type == 'bool'):
+            elif(input_type == 'bool'):
                 val = str(line.lower() == 'true').lower()
             else:
                 exit_error(
                     f'"type" defined in argument 2 is not valid type', 32)
 
-            self.setval(memory, 0, type, val)
+            self.setval(memory, 0, input_type, val)
         except(ValueError):
             self.setval(memory, 0, 'nil', 'nil')
     ############################################################################
 
     def _case_write_check_args(self):
         self.check_number_args(1)
-        if(self.args[0].type not in SYMB):
+        if(self.args[0].gettype() not in SYMB):
             exit_error(f'"{self.opcode}" argument 1 is not type of {SYMB}', 32)
 
     def _case_write_run(self, memory: 'Memory'):
@@ -640,8 +642,9 @@ class Instruction(object):
         self.check_types(1, SYMB)
 
     def _case_type_run(self, memory: 'Memory'):
-        if(self.args[1].type == 'var'):
-            if(memory.isdefined(self.args[1].frame, self.args[1].name)):
+        if(self.args[1].gettype() == 'var'):
+            frame, name = self.args[1].getvar()
+            if(memory.isdefined(frame, name)):
                 type, _ = self.getvar(memory, 1)
                 self.setval(memory, 0, 'string', type)
             else:
@@ -657,7 +660,7 @@ class Instruction(object):
         self.check_type(0, 'label')
 
     def _case_label_run(self, memory: 'Memory'):
-        memory.setlabel(self.args[0].content, memory.index)
+        memory.setlabel(self.args[0].getcontent(), memory.index)
     ############################################################################
 
     def _case_jump_check_args(self):
@@ -665,7 +668,7 @@ class Instruction(object):
         self.check_type(0, 'label')
 
     def _case_jump_run(self, memory: 'Memory'):
-        memory.jump(self.args[0].content)
+        memory.jump(self.args[0].getcontent())
     ############################################################################
 
     def _case_jumpifeq_check_args(self):
