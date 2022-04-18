@@ -97,6 +97,22 @@ class Instruction(object):
             type = self.args[arg_index].type
             if(type is None):
                 exit_error('Invalid argument type', 32)
+            if(type == 'string'):
+                while(1):
+                    escapes = re.search(r'\\\d\d\d', var)
+                    if(escapes):
+                        # found escape sequence
+                        x = escapes.start()+1
+                        y = escapes.end()
+                        # int(var[x:y]) extracts the character number from the escape sequence
+                        # then converts it to the corresponding character
+                        try:
+                            var = re.sub(r'\\\d\d\d', chr(
+                                int(var[x:y])), var, 1)
+                        except ValueError:
+                            exit_error('Invalid escape sequence', 32)
+                    else:
+                        break
 
         return type, var
 
@@ -361,7 +377,10 @@ class Instruction(object):
         type1, var1 = self.getvar(memory, 1)
         type2, var2 = self.getvar(memory, 2)
         if(type1 != type2):
-            exit_error('Argument 1 and 2 are not of same type', 32)
+            if(type1 == 'nil' or type2 == 'nil'):
+                self.setval(memory, 0, 'bool', 'false')
+            else:
+                exit_error('Argument 1 and 2 are not of same type', 32)
         if(var1 == var2):
             self.setval(memory, 0, 'bool', 'true')
         else:
@@ -593,14 +612,6 @@ class Instruction(object):
             exit_error(f'"{self.opcode}" argument 1 is not type of int', 32)
 
         char = var2[0]
-
-        escapes = re.search(r'\\\d\d\d', var2)
-        if(escapes):
-            # found escape sequence
-            if(escapes.start() == 0):
-                # escape sequence is at the beginning of string
-                # extract escape sequence number and get corresponding char
-                char = chr(int(var2[1:4]))
 
         # try to change char in string
         try:
