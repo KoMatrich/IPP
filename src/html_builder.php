@@ -19,7 +19,7 @@
             fclose($this->template);
         }
 
-        function build($steam,$mode,$count,$done_ok)
+        function build($mode,$count,$done_ok)
         {
             while (($line = stream_get_line($this->template, 1024, "\n")) !== false) {
                 $tmp = strtr($line, array(
@@ -31,7 +31,7 @@
                 '%BODY%' => $this->body
                 ));
 
-                fwrite($steam, $tmp);
+                print($tmp);
             }
         }
 

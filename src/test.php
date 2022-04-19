@@ -10,13 +10,16 @@ $dir = ".";
 $recursive = false;
 //default parser script path
 $parser = "parse.php";
+$parser_set = false;
 //default interpreter script path
 $interpreter = "interpret.py";
+$interpreter_set = false;
 //selectors
 $parser_only = false;
 $int_only = false;
 //default jexamxml path
 $jexampath = "/pub/courses/ipp/jexamxml";
+$jexampath_set = false;
 //no clean tmp files
 $no_clean = false;
 
@@ -49,6 +52,9 @@ for($i = 0; $i < $argc; $i++){
     }
 }
 
+if(count($argv) !== count(array_unique($argv)))
+    error(10, "duplicate arguments");
+
 //argument processing
 for($index = 1; $index < $argc; $index++) {
     $value = $argv[$index];
@@ -65,10 +71,12 @@ for($index = 1; $index < $argc; $index++) {
         case "-ps":
         case "--parse-script":
             $parser = getarg($index,$varg,$value);
+            $parser_set = true;
             break;
         case "-is":
         case "--int-script":
             $interpreter = getarg($index,$varg,$value);
+            $interpreter_set = true;
             break;
         case "-po":
         case "--parser-only":
@@ -81,6 +89,7 @@ for($index = 1; $index < $argc; $index++) {
         case "-jp":
         case "--jexampath":
             $jexampath = getarg($index,$varg,$value);
+            $jexampath_set = true;
             break;
         case "-nc":
         case "--no-clean":
@@ -95,9 +104,14 @@ for($index = 1; $index < $argc; $index++) {
 }
 
 //check for conflicting options
-// @TODO add more options
-if($parser_only && $int_only)
-    error(10, "parser-only and int-only options are mutually exclusive");
+if($parser_only && ($int_only || $interpreter_set)){
+    error(10, "conflicting options \"--parser-only\" and interpreter options");
+}
+
+if($int_only && ($parser_only || $parser_set || $jexampath_set)){
+    error(10, "conflicting options \"--int-only\" and parser options");
+}
+
 
 //checks if parser exists
 if (!$int_only){
@@ -112,13 +126,10 @@ if (!$int_only){
 if (!$parser_only){
     file_exists($interpreter) or error(11, "interpreter script \"$interpreter\" doesn't exist");
 }
-//gets all test files
-$output = fopen('index.html', 'w') or error(12, "can't create file \"+index.html+\"");
-fwrite($output, "Still testing...");
-fclose($output);
 
 $builder = new Builder();
 
+//gets all test files
 $correct = $files = open($dir, $recursive);
 $count = count($files);
 
@@ -162,15 +173,13 @@ if (!$int_only) {//run paser
                 goto skip_parser;
             }
         } else {
-            if ($rc != 0) {
+            if ($run_rc != 0) {
                 $builder->add_error($test, "parser failed with return code \"$run_rc\"");
                 //failed to parse remove test for interpreter
                 unset($correct[$index - 1]);
                 goto skip_parser;
             }
-
-            //no output check file
-            //goes directly to interpreter
+            //no output preset file to check with jexamxml or diff
         }
 
         $done_ok++;
@@ -229,9 +238,7 @@ if(!$parser_only && !$int_only){
     $done_ok/=2;
 }
 
-$output = fopen('index.html', 'w') or error(12, "can't create file \"+index.html+\"");
-$builder->build($output,$mode,$count,$done_ok);
-fclose($output);
+$builder->build($mode,$count,$done_ok);
 
 if(!$no_clean)
     foreach($files as $test){
