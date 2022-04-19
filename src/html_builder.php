@@ -46,13 +46,19 @@
 
         private function write($str)
         {
+            $start = preg_match('/<[^\/>]+[^>]*>/', $str);
+            $end = preg_match('/<\/[^>]+>/', $str);
+
+            if(!$start && $end)
+                $this->index--;
+
+            if($this->index < 0)
+                error(99, "XML elem < 0");
             //fwrite($this->output, html_element($str));
             $this->body = $this->body.str_repeat("\t", $this->index).$str."\n";
-            //sets correct indentation
-            if(preg_match('/<[^>]*>/', $str))
+
+            if($start && !$end)
                 $this->index++;
-            if(preg_match('/<\/[^>]*>/', $str))
-                $this->index--;
         }
 
         private function addRow($str, $class)
