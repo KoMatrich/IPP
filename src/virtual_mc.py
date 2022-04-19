@@ -60,7 +60,7 @@ class Memory:
                 exit_error('Using variable that is not defined', 54)
             return self._type
 
-        def defined(self) -> 'bool':
+        def isdefined(self) -> 'bool':
             if(self._type is None):
                 return False
             return True
@@ -89,7 +89,7 @@ class Memory:
         def isdefined(self, name: str) -> 'bool':
             for var in self._variables:
                 if(name == var.getname()):
-                    return var.defined()
+                    return var.isdefined()
             return False
 
     class Label:
@@ -124,15 +124,15 @@ class Memory:
         # Labels
         self._labels: 'list[Memory.Label]' = []
 
-        # Index of the next instruction
-        self.index: 'int' = 0
+        # Index of the instruction
+        self.pc: 'int' = 0
 
         # Input file/stream
         self._input: 'TextIO' = input
         self._eof = False
 
     def __str__(self) -> str:
-        lines = f'index:{self.index}\n'
+        lines = f'index:{self.pc}\n'
         lines += f'GF:\n{self._gf}\n'
         if(self._tf is None):
             lines += f'TF:none\n'
@@ -145,7 +145,7 @@ class Memory:
 
     # basic operations
     def inccounter(self):
-        self.index += 1
+        self.pc += 1
 
     def getinput(self) -> 'str':
         line = self._input.readline()
@@ -249,7 +249,7 @@ class Memory:
             exit_error(f'Label "{name}" was not defined', 52)
 
     def jump(self, label: 'str'):
-        self.index = self._getlabel(label).getpos()
+        self.pc = self._getlabel(label).getpos()
 
 
 if __name__ == "__main__":

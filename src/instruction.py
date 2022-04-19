@@ -259,7 +259,7 @@ class Instruction(object):
         self._check_type(0, 'label')
 
     def _xc_run_call(self, memory: 'Memory'):
-        memory.return_push(memory.index)
+        memory.return_push(memory.pc)
         memory.jump(self.args[0].getcontent())
     ############################################################################
 
@@ -268,7 +268,7 @@ class Instruction(object):
 
     def _xc_run_return(self, memory: 'Memory'):
         index = memory.return_pop()
-        memory.index = index
+        memory.pc = index
     ############################################################################
 
     def _xc_check_args_pushs(self):
@@ -659,7 +659,7 @@ class Instruction(object):
         self._check_type(0, 'label')
 
     def _xc_run_label(self, memory: 'Memory'):
-        memory.setlabel(self.args[0].getcontent(), memory.index)
+        memory.setlabel(self.args[0].getcontent(), memory.pc)
     ############################################################################
 
     def _xc_check_args_jump(self):

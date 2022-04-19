@@ -74,7 +74,7 @@ def get_instructions(xml_tree: 'ET.Element'):
 
 # add labels to memory
 def addlabels(memory: 'Memory', instructions: 'list[Instruction]'):
-    memory.index = 0
+    memory.pc = 0
     for inst in instructions:
         if inst.opcode == 'label':
             inst.run(memory)
@@ -93,11 +93,11 @@ def run(xml_tree: 'ET.Element', input: 'TextIO'):
 
     addlabels(memory, instructions)
 
-    memory.index = 0
-    while(memory.index < codelen):
+    memory.pc = 0
+    while(memory.pc < codelen):
         # print(f'Memory:\n{memory}')  # for debugging
-        if(instructions[memory.index].opcode != 'label'):
-            instructions[memory.index].run(memory)
+        if(instructions[memory.pc].opcode != 'label'):
+            instructions[memory.pc].run(memory)
         memory.inccounter()
 
 
