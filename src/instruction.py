@@ -5,90 +5,89 @@ from virtual_mc import *
 
 # This file contains the code for the interpretation of the instructions
 
-
-class Argument:
-    def __init__(self, arg: 'ET.Element'):
-        self._type = arg.get('type') or ''
-        if(self._type is ''):
-            exit_error(f'Argument "{arg.tag}" has no type', 32)
-
-        self._type = self._type.lower()
-
-        if(arg.text is None):
-            if(self._type == 'string'):
-                arg.text = ''
-            else:
-                exit_error(f'Argument "{arg.tag}" has no value', 32)
-
-        if(self._type == 'var'):
-            self._frame = arg.text[:2]
-            if(self._frame not in ['GF', 'LF', 'TF']):
-                exit_error(
-                    f'Argument "{arg.tag}" has invalid frame "{self._frame}"', 32)
-
-            self._name = arg.text[3:]
-
-            if(self._name == ''):
-                exit_error(f'Argument "{arg.tag}" has no name', 32)
-        else:
-            self._content = arg.text
-
-            if(self._type == 'int'):
-                if isInt(self._content):
-                    self._content = self._content
-                else:
-                    exit_error(
-                        f'Argument "{arg.tag}" of type "{self._type}" has invalid value "{self._content}"', 32)
-
-            elif(self._type == 'bool'):
-                if(self._content in ['true', 'false']):
-                    self._content = self._content
-                else:
-                    exit_error(
-                        f'Argument "{arg.tag}" of type "{self._type}" has invalid value "{self._content}"', 32)
-
-            elif(self._type == 'string'):
-                self._content = self._content
-
-            elif(self._type == 'type'):
-                self._content = self._content.lower()
-                if(self._content not in VAR_T):
-                    exit_error(
-                        f'Argument "{arg.tag}" type has invalid value "{self._content}"', 32)
-
-            elif(self._type == 'label'):
-                if(self._content == ''):
-                    exit_error(f'Label "{arg.tag}" has no name', 32)
-            elif(self._type == 'nil'):
-                if(self._content != 'nil'):
-                    exit_error(
-                        f'Argument "{arg.tag}" type nil can have only value of nil', 32)
-            else:
-                exit_error(
-                    f'Argument "{arg.tag}" has invalid type "{self._type}"', 32)
-
-    # returns type of
-    def gettype(self) -> str:
-        return self._type
-
-    # returns tuple[frame,name] of var
-    def getvar(self):
-        return self._frame, self._name
-
-    # returns content of constant
-    def getcontent(self):
-        if(self._content is None):
-            exit_error('Use of variable as constant value', 99)
-        return self._content
-
-
 class Instruction(object):
+    class Argument:
+        def __init__(self, arg: 'ET.Element'):
+            self._type = arg.get('type') or ''
+            if(self._type is ''):
+                exit_error(f'Argument "{arg.tag}" has no type', 32)
+
+            self._type = self._type.lower()
+
+            if(arg.text is None):
+                if(self._type == 'string'):
+                    arg.text = ''
+                else:
+                    exit_error(f'Argument "{arg.tag}" has no value', 32)
+
+            if(self._type == 'var'):
+                self._frame = arg.text[:2]
+                if(self._frame not in ['GF', 'LF', 'TF']):
+                    exit_error(
+                        f'Argument "{arg.tag}" has invalid frame "{self._frame}"', 32)
+
+                self._name = arg.text[3:]
+
+                if(self._name == ''):
+                    exit_error(f'Argument "{arg.tag}" has no name', 32)
+            else:
+                self._content = arg.text
+
+                if(self._type == 'int'):
+                    if isInt(self._content):
+                        self._content = self._content
+                    else:
+                        exit_error(
+                            f'Argument "{arg.tag}" of type "{self._type}" has invalid value "{self._content}"', 32)
+
+                elif(self._type == 'bool'):
+                    if(self._content in ['true', 'false']):
+                        self._content = self._content
+                    else:
+                        exit_error(
+                            f'Argument "{arg.tag}" of type "{self._type}" has invalid value "{self._content}"', 32)
+
+                elif(self._type == 'string'):
+                    self._content = self._content
+
+                elif(self._type == 'type'):
+                    self._content = self._content.lower()
+                    if(self._content not in VAR_T):
+                        exit_error(
+                            f'Argument "{arg.tag}" type has invalid value "{self._content}"', 32)
+
+                elif(self._type == 'label'):
+                    if(self._content == ''):
+                        exit_error(f'Label "{arg.tag}" has no name', 32)
+                elif(self._type == 'nil'):
+                    if(self._content != 'nil'):
+                        exit_error(
+                            f'Argument "{arg.tag}" type nil can have only value of nil', 32)
+                else:
+                    exit_error(
+                        f'Argument "{arg.tag}" has invalid type "{self._type}"', 32)
+
+        # returns type of
+        def gettype(self) -> str:
+            return self._type
+
+        # returns tuple[frame,name] of var
+        def getvar(self):
+            return self._frame, self._name
+
+        # returns content of constant
+        def getcontent(self):
+            if(self._content is None):
+                exit_error('Use of variable as constant value', 99)
+            return self._content
+
+
     def __init__(self, instruction: ET.Element):
         self.opcode = instruction.get('opcode')
         if(self.opcode is None):
             exit_error('opcode is missing', 32)
         self.opcode = self.opcode.lower()
-        self.args: 'list[Argument]' = []
+        self.args: 'list[Instruction.Argument]' = []
         self._set_args(instruction)
         self._check_args()
 
@@ -131,7 +130,7 @@ class Instruction(object):
             else:
                 index_list.append(arg.tag)
 
-        self.args = [Argument(arg) for arg in args]
+        self.args = [Instruction.Argument(arg) for arg in args]
 
     # inteligently gets value from arg or memory
     def getvar(self, memory: 'Memory', arg_index: 'int') -> 'tuple[str, str]':

@@ -1,15 +1,15 @@
 import sys
 
-
+# print to stderr
 def eprint(*args: 'object', **kwargs: 'dict[str, object]'):
     print(*args, file=sys.stderr, **kwargs)
 
-
+# prints error message and exits with code
 def exit_error(error_message: 'str', rc: 'int'):
     eprint(f'interpret.py: {error_message}')
     exit(rc)
 
-
+# help menu of the program
 def print_help():
     print('Usage: interpret.py [--help] [--source=<source>] [--input=<input>]')
     print('\t--help                 Print this help')
@@ -30,7 +30,7 @@ def isInt(s: str):
     except Exception as e:
         exit_error(f'{e}', 99)
 
-
+# definition of variable types
 NUMERIC_T = ['int']
 VAR_T = NUMERIC_T + ['bool', 'string', 'nil']
 
