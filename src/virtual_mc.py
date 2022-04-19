@@ -256,6 +256,8 @@ class Memory:
         self._tf = None
 
     def popframe(self):
+        if(self._tf is not None):
+            exit_error(f'Frame "TF" is defined', 55)
         self._tf = self._lf.pop()
 
     # label operations

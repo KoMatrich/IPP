@@ -604,6 +604,15 @@ class Instruction(object):
         if(type2 != 'int'):
             exit_error(f'"{self.opcode}" argument 2 is not type of int', 53)
 
+        # i is index of char in string to change
+        i = -1
+        try:
+            i = int(var1)
+        except ValueError:
+            exit_error(f'"{self.opcode}" argument 1 is not type of int', 53)
+        if(len(var1) <= i or i < 0):
+            exit_error('"{self.opcode}" argument 1 is out of range', 58)
+
         try:
             self._setval(memory, 0, 'string', var1[int(var2)])
         except IndexError:
