@@ -16,6 +16,7 @@ Login: xkocic02
 - In this implementation, all instructions are operating with virtual machine memory,
     Which is defined in `virtual_mc.py`. This allow quick and easy implementation of
     new instructions.
+- For usage type `python3 interpret.py --help`
 
 ### Classes
 - `Instruction`
@@ -136,6 +137,7 @@ Login: xkocic02
 - `functions.php` contains definitions of basic functions
 - `html_builder.php` contains defintion of class `Builder`
 - `template.html` contains template for html page used by `html_builder.php`
+- For usage type `php8.1 test.php --help`
 
 ### Classes
 - `Builder`
