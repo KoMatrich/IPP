@@ -39,7 +39,7 @@
                 "XDEBUG_CONFIG": "client_port=${port}"
             },
             "args":
-            ["-r","-d=Testy/interpret-only","-io"]
+            ["-r","-d=./Testy/interpret-only","-io"]
         },
         {
             "name": "PHP: test.php parser only",
@@ -56,7 +56,7 @@
                 "XDEBUG_CONFIG": "client_port=${port}"
             },
             "args":
-            ["--jexampath=jexamxml","-po"]
+            ["-r","-d=./Testy/parse-only","--jexampath=./jexamxml","-po"]
         },
         {
             "name": "PHP: test.php both",
@@ -73,7 +73,7 @@
                 "XDEBUG_CONFIG": "client_port=${port}"
             },
             "args":
-            ["-r","-d=Testy/both"]
+            ["-r","-d=./Testy/both"]
         }
     ]
 

@@ -141,7 +141,7 @@ if (!$int_only) {//run paser
         if ($parser_only) {
             if ($rc != $run_rc) {
                 $builder->add_error($test, "return code \"$run_rc\" is not equal to \"$rc\"");
-                goto clean_parser_tmp;
+                goto skip_parser;
             }
 
             // check output with jexamxml
@@ -157,14 +157,14 @@ if (!$int_only) {//run paser
                     $builder->add_error($test, "jexamxml error: output file is not correctly formatted");
                 else
                     error(99, "jexamxml error: return code is $run_rc");
-                goto clean_parser_tmp;
+                goto skip_parser;
             }
         } else {
             if ($rc != 0) {
                 $builder->add_error($test, "parser failed with return code \"$run_rc\"");
                 //failed to parse remove test for interpreter
                 unset($correct[$index - 1]);
-                goto clean_parser_tmp;
+                goto skip_parser;
             }
 
             //no output check file
@@ -174,18 +174,7 @@ if (!$int_only) {//run paser
         $done_ok++;
         $builder->add_success($test);
 
-        clean_parser_tmp:
-        if(!$no_clean){
-            if (file_exists($test.$i_err))
-                unlink($test.$i_err);
-            if (file_exists($test.$p_rc))
-                unlink($test.$p_rc);
-            if($parser_only)
-                if (file_exists($test.$p_out))
-                    unlink($test.$p_out);
-            if(file_exists($test.$p_err))
-                unlink($test.$p_err);
-        }
+        skip_parser:
     }
     $builder->end_section();
 }
@@ -213,42 +202,49 @@ if (!$parser_only) {//run interpreter
 
         if ($rc != $run_rc) {
             $builder->add_error($test, "return code \"$run_rc\" is not equal to \"$rc\"");
-            goto clean_interpret_tmp;
+            goto skip_interpret;
         }
 
         exec("diff -w -B -q $test.out $test$i_out", $_, $return_code);
         if ($return_code != 0) {
             $builder->add_error($test, "output is not equal to preset");
-            goto clean_interpret_tmp;
+            goto skip_interpret;
         }
 
         $builder->add_success($test);
 
         $done_ok++;
 
-        clean_interpret_tmp:
-        if(!$no_clean){
-            if (file_exists($test.$i_err))
-                unlink($test.$i_err);
-            if (file_exists($test.$i_out))
-                unlink($test.$i_out);
-            if (file_exists($test.$i_rc))
-                unlink($test.$i_rc);
-            if (file_exists($test.$p_out))
-                unlink($test.$p_out);
-            if(file_exists($test.$i_err))
-                unlink($test.$i_err);
-        }
+        skip_interpret:
     }
     $builder->end_section();
 }
 
 $mode = $parser_only || $int_only ? ($int_only ? 'Interpret only': 'Parser only') : 'Parser and Interpreter';
 
-if(!$parser_only && !$int_only)
+if(!$parser_only && !$int_only){
+
     $done_ok/=2;
+}
 
 $builder->build($mode,$count,$done_ok);
 fclose($output);
+
+if(!$no_clean)
+    foreach($files as $test){
+            if (file_exists($test.$p_err))
+                exec("rm $test$p_err");
+            if (file_exists($test.$p_out))
+                exec("rm $test$p_out");
+            if (file_exists($test.$p_rc))
+                exec("rm $test$p_rc");
+
+            if (file_exists($test.$i_err))
+                exec("rm $test$i_err");
+            if (file_exists($test.$i_out))
+                exec("rm $test$i_out");
+            if (file_exists($test.$i_rc))
+                exec("rm $test$i_rc");
+    }
 
 exit (0);
