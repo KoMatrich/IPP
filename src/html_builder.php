@@ -7,11 +7,10 @@
             $this->template = fopen('template.html', 'r') or error(99, "can't open file \"template.html\"");
         }
 
-        function __construct($output)
+        function __construct()
         {
             $this->get_template();
             $this->index = 2;
-            $this->output = $output;
             $this->body = "";
         }
 
@@ -20,9 +19,8 @@
             fclose($this->template);
         }
 
-        function build($mode,$count,$done_ok)
+        function build($steam,$mode,$count,$done_ok)
         {
-
             while (($line = stream_get_line($this->template, 1024, "\n")) !== false) {
                 $tmp = strtr($line, array(
                 '%TITLE%' => 'Test results',
@@ -33,7 +31,7 @@
                 '%BODY%' => $this->body
                 ));
 
-                fwrite($this->output, $tmp);
+                fwrite($steam, $tmp);
             }
         }
 

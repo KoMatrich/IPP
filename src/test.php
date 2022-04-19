@@ -114,8 +114,10 @@ if (!$parser_only){
 }
 //gets all test files
 $output = fopen('index.html', 'w') or error(12, "can't create file \"+index.html+\"");
+fwrite($output, "Still testing...");
+fclose($output);
 
-$builder = new Builder($output);
+$builder = new Builder();
 
 $correct = $files = open($dir, $recursive);
 $count = count($files);
@@ -227,7 +229,8 @@ if(!$parser_only && !$int_only){
     $done_ok/=2;
 }
 
-$builder->build($mode,$count,$done_ok);
+$output = fopen('index.html', 'w') or error(12, "can't create file \"+index.html+\"");
+$builder->build($output,$mode,$count,$done_ok);
 fclose($output);
 
 if(!$no_clean)
