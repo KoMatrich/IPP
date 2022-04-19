@@ -7,7 +7,7 @@ Login: xkocic02
 ### Basic info
 - `iterpret.py` is main script that does interpretation of XML form of IPPcode22.
 - `common.py` contains definitions of simple methods and groups of variable types.
-- `virtual_mc.py` contains stand alone virtual machine memory definition
+- `virtual_mc.py` contains stand alone VM memory definition
 - `instruction.py` contains implementation of instructions that operates on VM
 
 ### Classes
@@ -68,6 +68,35 @@ Login: xkocic02
         |-|-|
         |`inccounter`   |increments program counter|
         |`getinput`     |returns one line from input without '\n' at end|
+        |`endoffile`    |returns if end of file is reached|
+
+        |data stack methods |
+        |-|
+        |`data_push`        |
+        |`data_pop`         |
+
+        |return stack methods|
+        |-|
+        |`return_push`      |
+        |`return_pop`       |
+
+        |frame data methods|
+        |-|
+        |`defvar`|
+        |`getvar`|
+        |`setvar`|
+        |`isdefined`|
+
+        |frame methods|
+        |-|
+        |`createframe`|
+        |`pushframe`|
+        |`popframe`|
+
+        |label methods  |description|
+        |-|-|
+        |`setlabel`     |adds label to memory|
+        |`jump`         |sets `_pc` to label pos|
 
 
     - `Variable`

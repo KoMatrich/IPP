@@ -184,18 +184,6 @@ class Memory:
         else:
             exit_error(f'Invalid frame "{frame}"', 55)
 
-    def isdefined(self, frame: 'str', name: 'str') -> 'bool':
-        if(frame == 'GF'):
-            return self._gf.isdefined(name)
-        elif(frame == 'TF'):
-            if(self._tf is None):
-                exit_error(f'Frame "TF" is not defined', 55)
-            return self._tf.isdefined(name)
-        elif(frame == 'LF'):
-            return self._lf.top().isdefined(name)
-        else:
-            exit_error(f'Invalid frame "{frame}"', 55)
-
     def getvar(self, frame: 'str', name: 'str') -> 'tuple[str,str]':
         if(frame == 'GF'):
             var = self._gf.getvar(name)
@@ -209,7 +197,7 @@ class Memory:
             exit_error(f'Invalid frame "{frame}"', 55)
         return var.gettype(), var.getvalue()
 
-    def setvalue(self, frame: 'str', name: 'str', type: 'str', value: 'str'):
+    def setvar(self, frame: 'str', name: 'str', type: 'str', value: 'str'):
         if(frame == 'GF'):
             var = self._gf.getvar(name)
         elif(frame == 'TF'):
@@ -221,6 +209,18 @@ class Memory:
         else:
             exit_error(f'Invalid frame "{frame}"', 55)
         var.setvalue(value, type)
+
+    def isdefined(self, frame: 'str', name: 'str') -> 'bool':
+        if(frame == 'GF'):
+            return self._gf.isdefined(name)
+        elif(frame == 'TF'):
+            if(self._tf is None):
+                exit_error(f'Frame "TF" is not defined', 55)
+            return self._tf.isdefined(name)
+        elif(frame == 'LF'):
+            return self._lf.top().isdefined(name)
+        else:
+            exit_error(f'Invalid frame "{frame}"', 55)
 
     # frame operations
     def createframe(self):

@@ -170,7 +170,7 @@ class Instruction(object):
     def _setval(self, memory: 'Memory', arg_index: 'int', type: 'str', value: 'str'):
         if(self.args[arg_index].gettype() == 'var'):
             frame, name = self.args[arg_index].getvar()
-            memory.setvalue(frame, name, value, type)
+            memory.setvar(frame, name, value, type)
         else:
             exit_error('cannot set value to non-variable argument', 32)
 
