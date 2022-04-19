@@ -18,7 +18,7 @@
             "program": "interpret.py",
             "cwd": "${workspaceFolder}/src",
             "args": [
-                "--source=./${input:promptPath}.p_run_out",
+                "--source=./${input:promptPath}.src",
                 "--input=./${input:promptPath}.in"
             ],
             "console": "integratedTerminal",
