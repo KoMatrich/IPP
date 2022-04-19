@@ -135,3 +135,17 @@ Login: xkocic02
 - `test.php` is php script for testing `interpret.py`
 - `functions.php` contains definitions of basic functions
 - `html_builder.php` contains defintion of class `Builder`
+- `template.html` contains template for html page used by `html_builder.php`
+
+### Classes
+- `Builder`
+    - builds `index.htm` page from template
+    - in template variables (%var%) are replaced by values from `test.php`
+    |function           |description|
+    |-|-|
+    |`build`            |builds whole html|
+    |`start_section`    |starts new section (table)|
+    |`add_header`       |adds header of table|
+    |`add_success`      |adds success message|
+    |`add_failure`      |adds failure message|
+    |`end_section`      |ends section (table)|
