@@ -151,7 +151,7 @@ class Memory:
         line = self._input.readline()
         if(len(line) == 0):
             self._eof = True
-        line = line.rstrip()
+        line = line.rstrip('\n')
         return line
 
     def endoffile(self) -> bool:

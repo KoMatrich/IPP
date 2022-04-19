@@ -67,7 +67,7 @@ Login: xkocic02
         |methods        |description|
         |-|-|
         |`inccounter`   |increments program counter|
-        |`getinput`     |returns one line from input without trailing whitespaces|
+        |`getinput`     |returns one line from input without '\n' at end|
 
 
     - `Variable`
