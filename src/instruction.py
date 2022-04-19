@@ -9,7 +9,7 @@ class Instruction(object):
     class Argument:
         def __init__(self, arg: 'ET.Element'):
             self._type = arg.get('type') or ''
-            if(self._type is ''):
+            if(self._type == ''):
                 exit_error(f'Argument "{arg.tag}" has no type', 32)
 
             self._type = self._type.lower()
