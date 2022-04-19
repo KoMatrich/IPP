@@ -106,6 +106,7 @@ Login: xkocic02
         |label methods  |description|
         |-|-|
         |`setlabel`     |adds label to memory|
+        |`getlabel`     |returns label by name|
         |`jump`         |sets `_pc` to label pos|
 
 
@@ -131,7 +132,7 @@ Login: xkocic02
 
     - `Label`
         - class that contains data of label
-        - has only one method `getpos` that returns position of label in code
+        - has only one method `getpos` and `getname`
 
 
 ---

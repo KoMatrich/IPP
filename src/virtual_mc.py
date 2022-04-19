@@ -15,7 +15,7 @@ class Stack(Generic[T]):
         if not self.isempty():
             return self._stack.pop()
         else:
-            exit_error('Stack is empty', 56)
+            exit_error('Stack is empty', 55)
 
     def top(self) -> T:
         if(self.isempty()):
@@ -118,6 +118,9 @@ class Memory:
 
         def getpos(self) -> int:
             return self._pos
+
+        def getname(self) -> str:
+            return self._name
 
     def __init__(self, input: 'TextIO'):
         # Memory frames
@@ -261,7 +264,7 @@ class Memory:
             exit_error(f'Label "{name}" was already defined', 52)
         self._labels.append(Memory.Label(name, pos))
 
-    def _getlabel(self, name: str) -> 'Label':
+    def getlabel(self, name: str) -> 'Label':
         for label in self._labels:
             if(label == name):
                 return label
@@ -269,7 +272,7 @@ class Memory:
             exit_error(f'Label "{name}" was not defined', 52)
 
     def jump(self, label: 'str'):
-        self.pc = self._getlabel(label).getpos()
+        self.pc = self.getlabel(label).getpos()
 
 
 if __name__ == "__main__":

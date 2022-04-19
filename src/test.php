@@ -132,10 +132,10 @@ $builder = new Builder();
 //gets all test files
 $correct = $files = open($dir, $recursive);
 $count = count($files);
+$done_ok = 0;
 
 if (!$int_only) {//run paser
     $index = 0;
-    $done_ok = 0;
     $builder->start_section("Parser tests");
     $builder->add_header();
 
@@ -192,7 +192,6 @@ if (!$int_only) {//run paser
 
 if (!$parser_only) {//run interpreter
     $index = 0;
-    $done_ok = 0;
     $builder->start_section("Interpreter tests");
     $builder->add_header();
 
@@ -204,12 +203,17 @@ if (!$parser_only) {//run interpreter
         $run_rc = -1;
 
         if ($int_only)
-            exec("python3 $interpreter --input=\"$test.in\" --source=\"$test.src\" 2>$test$i_err", $run_out, $run_rc);
+            exec("timeout 5s python3 $interpreter --input=\"$test.in\" --source=\"$test.src\" 2>$test$i_err", $run_out, $run_rc);
         else
-            exec("python3 $interpreter --input=\"$test.in\" --source=\"$test$p_out\" 2>$test$i_err", $run_out, $run_rc);
+            exec("timeout 5s python3 $interpreter --input=\"$test.in\" --source=\"$test$p_out\" 2>$test$i_err", $run_out, $run_rc);
 
         write_tmp_file($test.$i_out, implode("\n", $run_out));
         write_tmp_file($test.$i_rc, $run_rc);
+
+        if($rc == 124){
+            $builder->add_error($test, "interpreter timeout (propably infinite loop or large program)");
+            goto skip_interpret;
+        }
 
         if ($rc != $run_rc) {
             $builder->add_error($test, "return code \"$run_rc\" is not equal to \"$rc\"");
@@ -234,7 +238,6 @@ if (!$parser_only) {//run interpreter
 $mode = $parser_only || $int_only ? ($int_only ? 'Interpret only': 'Parser only') : 'Parser and Interpreter';
 
 if(!$parser_only && !$int_only){
-
     $done_ok/=2;
 }
 

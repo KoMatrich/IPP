@@ -5,6 +5,7 @@ from virtual_mc import *
 
 # This file contains the code for the interpretation of the instructions
 
+
 class Instruction(object):
     class Argument:
         def __init__(self, arg: 'ET.Element'):
@@ -80,7 +81,6 @@ class Instruction(object):
             if(self._content is None):
                 exit_error('Use of variable as constant value', 99)
             return self._content
-
 
     def __init__(self, instruction: ET.Element):
         self.opcode = instruction.get('opcode')
@@ -368,7 +368,9 @@ class Instruction(object):
         type1, var1 = self._getvar(memory, 1)
         type2, var2 = self._getvar(memory, 2)
         if(type1 != type2):
-            exit_error('Argument 1 and 2 are not of same type', 32)
+            exit_error('Argument 1 and 2 are not of same type', 53)
+        if(not type1 in VAR_T_NO_NILL):
+            exit_error('Wrong argument type', 53)
         if(type1 == 'int'):
             self._setval(memory, 0, 'bool', str(int(var1) < int(var2)).lower())
         else:
@@ -382,7 +384,9 @@ class Instruction(object):
         type1, var1 = self._getvar(memory, 1)
         type2, var2 = self._getvar(memory, 2)
         if(type1 != type2):
-            exit_error('Argument 1 and 2 are not of same type', 32)
+            exit_error('Argument 1 and 2 are not of same type', 53)
+        if(not type1 in VAR_T_NO_NILL):
+            exit_error('Wrong argument type', 53)
         if(type1 == 'int'):
             self._setval(memory, 0, 'bool', str(int(var1) > int(var2)).lower())
         else:
@@ -395,15 +399,19 @@ class Instruction(object):
     def _xc_run_eq(self, memory: 'Memory'):
         type1, var1 = self._getvar(memory, 1)
         type2, var2 = self._getvar(memory, 2)
+        # special eq nil case
+        if(type1 == 'nil' or type2 == 'nil'):
+            return type1 == type2
+        # normal case
         if(type1 != type2):
-            if(type1 == 'nil' or type2 == 'nil'):
-                self._setval(memory, 0, 'bool', 'false')
-            else:
-                exit_error('Argument 1 and 2 are not of same type', 53)
-        if(var1 == var2):
-            self._setval(memory, 0, 'bool', 'true')
+            exit_error('Argument 1 and 2 are not of same type', 53)
+        if(not type1 in VAR_T_NO_NILL):
+            exit_error('Wrong argument type', 53)
+        if(type1 == 'int'):
+            self._setval(memory, 0, 'bool', str(
+                int(var1) == int(var2)).lower())
         else:
-            self._setval(memory, 0, 'bool', 'false')
+            self._setval(memory, 0, 'bool', str(var1 == var2).lower())
     ############################################################################
 
     ############################################################################
@@ -625,14 +633,14 @@ class Instruction(object):
             i = int(var1)
         except ValueError:
             exit_error(f'"{self.opcode}" argument 1 is not type of int', 53)
+        if(len(var) <= i or i < 0):
+            exit_error('"{self.opcode}" argument 1 is out of range', 58)
+        if(len(var2) == 0):
+            exit_error('"{self.opcode}" argument 2 is empty', 58)
 
         char = var2[0]
 
-        # try to change char in string
-        try:
-            var = var[:i]+char+var[i+1:]
-        except IndexError:
-            exit_error(f'"{self.opcode}" argument 1 is out of range', 58)
+        var = var[:i]+char+var[i+1:]
 
         self._setval(memory, 0, 'string', var)
     ############################################################################
@@ -679,8 +687,10 @@ class Instruction(object):
         self._check_types(2, SYMB)
 
     def _xc_run_jumpifeq(self, memory: 'Memory'):
+        _,   l_name = self._getvar(memory, 0)
         type1, var1 = self._getvar(memory, 1)
         type2, var2 = self._getvar(memory, 2)
+        label = memory.getlabel(l_name)
 
         if(type1 != type2):
             if(type1 != 'nil') and (type2 != 'nil'):
@@ -688,8 +698,7 @@ class Instruction(object):
                     f'"{self.opcode}" argument 1 and 2 are not same types "{type1}" != "{type2}"', 53)
         else:
             if(var1 == var2):
-                _, var = self._getvar(memory, 0)
-                memory.jump(var)
+                memory.jump(label.getname())
     ############################################################################
 
     def _xc_check_args_jumpifneq(self):
@@ -699,19 +708,20 @@ class Instruction(object):
         self._check_types(2, SYMB)
 
     def _xc_run_jumpifneq(self, memory: 'Memory'):
+        _,   l_name = self._getvar(memory, 0)
         type1, var1 = self._getvar(memory, 1)
         type2, var2 = self._getvar(memory, 2)
+        label = memory.getlabel(l_name)
 
         if(type1 != type2):
             if(type1 != 'nil') and (type2 != 'nil'):
                 exit_error(
                     f'"{self.opcode}" argument 1 and 2 are not same types "{type1}" != "{type2}"', 53)
         else:
-            if(var1 == var2):
+            if(var1 != var2):
                 return
 
-        _, var = self._getvar(memory, 0)
-        memory.jump(var)
+        memory.jump(label.getname())
     ############################################################################
 
     def _xc_check_args_exit(self):

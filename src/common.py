@@ -33,6 +33,7 @@ def isInt(s: str):
 # definition of variable types
 NUMERIC_T = ['int']
 VAR_T = NUMERIC_T + ['bool', 'string', 'nil']
+VAR_T_NO_NILL = NUMERIC_T + ['bool', 'string']
 
 SYMB_STRING = ['var', 'string']
 SYMB_BOOL = ['var', 'bool']
