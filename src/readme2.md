@@ -10,6 +10,13 @@ Login: xkocic02
 - `virtual_mc.py` contains stand alone VM memory definition
 - `instruction.py` contains implementation of instructions that operates on VM
 
+- This implementation is based on [IPPcode22](https://wis.fit.vutbr.cz/FIT/st/cfs.php/course/IPP-IT/projects/2021-2022/Zadani/ipp22spec.pdf)
+- Implementation stores values as strings, which is not optimal,
+    becouse of their size in memory and need of conversions to int.
+- In this implementation, all instructions are operating with virtual machine memory,
+    Which is defined in `virtual_mc.py`. This allow quick and easy implementation of
+    new instructions.
+
 ### Classes
 - `Instruction`
     - implementation of virtual instruction
