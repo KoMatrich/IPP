@@ -27,7 +27,8 @@ Login: xkocic02
         |`_set_args`            |inicializes instruction arguments|
         |`_getvar`              |returns value from memory or constant depending on type of arg|
         |`_setval`              |same as `getvar`, but sets value (error if used on constant)|
-        |`_isdefined`           |returns if variable is defined|
+        |`_isinicialized`       |returns if variable is inicialized|
+        |`isdefined`            |returns if variable is defined|
         |`_isconst`             |returns if var is constant|
         |`_check_args`          |runs static check for given instruction|
         |`_check_number_args`   |check number of arguments|
@@ -93,6 +94,7 @@ Login: xkocic02
         |`defvar`|
         |`getvar`|
         |`setvar`|
+        |`isinicialized`|
         |`isdefined`|
 
         |frame methods|
@@ -109,21 +111,23 @@ Login: xkocic02
 
     - `Variable`
         - class that contains data of variable
-            |method     |description|
+            |method         |description|
             |-|-|
-            |`setvalue` |sets type and value to variable|
-            |`getname`  |returns name of current var|
-            |`getvalue` |returns value|
-            |`gettype`  |returns type|
-            |`isdefined`|returns true if type is set|
+            |`setvalue`     |sets type and value to variable|
+            |`getname`      |returns name of current var|
+            |`getvalue`     |returns value|
+            |`gettype`      |returns type|
+            |`isinicialized`|returns true if variable is inicialized (type is set)|
+            |`isdefined`    |returns true if variable is defined|
 
     - `Frame`
         - class that contains data of frame
-            |method     |description|
+            |method         |description|
             |-|-|
-            |`createvar`|creates new variable in current frame|
-            |`getvar`   |returns variable by name|
-            |`isdefined`|returns true if variable is defined|
+            |`createvar`    |creates new variable in current frame|
+            |`getvar`       |returns variable by name|
+            |`isinicialized`|returns true if variable is inicialized|
+            |`isdefined`    |returns true if variable is defined|
 
     - `Label`
         - class that contains data of label

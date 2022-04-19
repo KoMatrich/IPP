@@ -174,7 +174,7 @@ class Instruction(object):
         else:
             exit_error('cannot set value to non-variable argument', 32)
 
-    def _isdefined(self, memory: 'Memory', arg_index: 'int') -> 'bool':
+    def _isinicialized(self, memory: 'Memory', arg_index: 'int') -> 'bool':
         if(self.args[arg_index].gettype() == 'var'):
             frame, name = self.args[arg_index].getvar()
             return memory.isdefined(frame, name)
@@ -399,7 +399,7 @@ class Instruction(object):
             if(type1 == 'nil' or type2 == 'nil'):
                 self._setval(memory, 0, 'bool', 'false')
             else:
-                exit_error('Argument 1 and 2 are not of same type', 32)
+                exit_error('Argument 1 and 2 are not of same type', 53)
         if(var1 == var2):
             self._setval(memory, 0, 'bool', 'true')
         else:
@@ -422,9 +422,9 @@ class Instruction(object):
         type1, var1 = self._getvar(memory, 1)
         type2, var2 = self._getvar(memory, 2)
         if(type1 != 'bool'):
-            exit_error(f'"{self.opcode}" argument 1 is not type of bool', 32)
+            exit_error(f'"{self.opcode}" argument 1 is not type of bool', 53)
         if(type2 != 'bool'):
-            exit_error(f'"{self.opcode}" argument 2 is not type of bool', 32)
+            exit_error(f'"{self.opcode}" argument 2 is not type of bool', 53)
         if(var1 == 'true' and var2 == 'true'):
             self._setval(memory, 0, 'bool', 'true')
         else:
@@ -438,9 +438,9 @@ class Instruction(object):
         type1, var1 = self._getvar(memory, 1)
         type2, var2 = self._getvar(memory, 2)
         if(type1 != 'bool'):
-            exit_error(f'"{self.opcode}" argument 1 is not type of bool', 32)
+            exit_error(f'"{self.opcode}" argument 1 is not type of bool', 53)
         if(type2 != 'bool'):
-            exit_error(f'"{self.opcode}" argument 2 is not type of bool', 32)
+            exit_error(f'"{self.opcode}" argument 2 is not type of bool', 53)
         if(var1 == 'true' or var2 == 'true'):
             self._setval(memory, 0, 'bool', 'true')
         else:
@@ -455,7 +455,7 @@ class Instruction(object):
     def _xc_run_not(self, memory: 'Memory'):
         type, var = self._getvar(memory, 1)
         if(type != 'bool'):
-            exit_error(f'"{self.opcode}" argument 1 is not type of bool', 32)
+            exit_error(f'"{self.opcode}" argument 1 is not type of bool', 53)
         if(var == 'true'):
             self._setval(memory, 0, 'bool', 'false')
         else:
@@ -471,7 +471,7 @@ class Instruction(object):
     def _xc_run_int2char(self, memory: 'Memory'):
         type, var = self._getvar(memory, 1)
         if(type != 'int'):
-            exit_error(f'"{self.opcode}" argument 1 is not type of int', 32)
+            exit_error(f'"{self.opcode}" argument 1 is not type of int', 53)
         try:
             out = chr(int(var))
         except(ValueError):
@@ -489,9 +489,11 @@ class Instruction(object):
         type1, var1 = self._getvar(memory, 1)
         type2, var2 = self._getvar(memory, 2)
         if(type1 != 'string'):
-            exit_error(f'"{self.opcode}" argument 1 is not type of str', 32)
+            exit_error(f'"{self.opcode}" argument 1 is not type of str', 53)
         if(type2 != 'int'):
-            exit_error(f'"{self.opcode}" argument 2 is not type of int', 32)
+            exit_error(f'"{self.opcode}" argument 2 is not type of int', 53)
+        if(int(var2) < 0):
+            exit_error(f'"{self.opcode}" argument 2 is negative', 58)
 
         try:
             out = str(ord(var1[int(var2)]))
@@ -505,9 +507,9 @@ class Instruction(object):
     def _xc_check_args_read(self):
         self._check_number_args(2)
         if(self.args[0].gettype() != 'var'):
-            exit_error(f'"{self.opcode}" argument 1 is not type of var', 32)
+            exit_error(f'"{self.opcode}" argument 1 is not type of var', 53)
         if(self.args[1].gettype() != 'type'):
-            exit_error(f'"{self.opcode}" argument 2 is not type of type', 32)
+            exit_error(f'"{self.opcode}" argument 2 is not type of type', 53)
 
     def _xc_run_read(self, memory: 'Memory'):
         line = memory.getinput()
@@ -525,7 +527,7 @@ class Instruction(object):
                 val = str(line.lower() == 'true').lower()
             else:
                 exit_error(
-                    f'"type" defined in argument 2 is not valid type', 32)
+                    f'"type" defined in argument 2 is not valid type', 53)
 
             self._setval(memory, 0, input_type, val)
         except(ValueError):
@@ -558,9 +560,9 @@ class Instruction(object):
         type2, var2 = self._getvar(memory, 2)
 
         if(type1 != 'string'):
-            exit_error(f'"{self.opcode}" argument 1 is not type of str', 32)
+            exit_error(f'"{self.opcode}" argument 1 is not type of str', 53)
         if(type2 != 'string'):
-            exit_error(f'"{self.opcode}" argument 2 is not type of str', 32)
+            exit_error(f'"{self.opcode}" argument 2 is not type of str', 53)
 
         self._setval(memory, 0, 'string', var1 + var2)
     ############################################################################
@@ -574,7 +576,7 @@ class Instruction(object):
         type1, var1 = self._getvar(memory, 1)
 
         if(type1 != 'string'):
-            exit_error(f'"{self.opcode}" argument 1 is not type of str', 32)
+            exit_error(f'"{self.opcode}" argument 1 is not type of str', 53)
 
         self._setval(memory, 0, 'int', str(len(var1)))
     ############################################################################
@@ -590,9 +592,9 @@ class Instruction(object):
         type2, var2 = self._getvar(memory, 2)
 
         if(type1 != 'string'):
-            exit_error(f'"{self.opcode}" argument 1 is not type of str', 32)
+            exit_error(f'"{self.opcode}" argument 1 is not type of str', 53)
         if(type2 != 'int'):
-            exit_error(f'"{self.opcode}" argument 2 is not type of int', 32)
+            exit_error(f'"{self.opcode}" argument 2 is not type of int', 53)
 
         try:
             self._setval(memory, 0, 'string', var1[int(var2)])
@@ -611,18 +613,18 @@ class Instruction(object):
         type1, var1 = self._getvar(memory, 1)
         type2, var2 = self._getvar(memory, 2)
         if(type != 'string'):
-            exit_error(f'"{self.opcode}" argument 0 is not type of str', 32)
+            exit_error(f'"{self.opcode}" argument 0 is not type of str', 53)
         if(type1 != 'int'):
-            exit_error(f'"{self.opcode}" argument 1 is not type of int', 32)
+            exit_error(f'"{self.opcode}" argument 1 is not type of int', 53)
         if(type2 != 'string'):
-            exit_error(f'"{self.opcode}" argument 2 is not type of str', 32)
+            exit_error(f'"{self.opcode}" argument 2 is not type of str', 53)
 
         # i is index of char in string to change
         i = -1
         try:
             i = int(var1)
         except ValueError:
-            exit_error(f'"{self.opcode}" argument 1 is not type of int', 32)
+            exit_error(f'"{self.opcode}" argument 1 is not type of int', 53)
 
         char = var2[0]
 
@@ -643,7 +645,7 @@ class Instruction(object):
     def _xc_run_type(self, memory: 'Memory'):
         if(self.args[1].gettype() == 'var'):
             frame, name = self.args[1].getvar()
-            if(memory.isdefined(frame, name)):
+            if(memory.isinicialized(frame, name)):
                 type, _ = self._getvar(memory, 1)
                 self._setval(memory, 0, 'string', type)
             else:
@@ -683,7 +685,7 @@ class Instruction(object):
         if(type1 != type2):
             if(type1 != 'nil') and (type2 != 'nil'):
                 exit_error(
-                    f'"{self.opcode}" argument 1 and 2 are not same types "{type1}" != "{type2}"', 32)
+                    f'"{self.opcode}" argument 1 and 2 are not same types "{type1}" != "{type2}"', 53)
         else:
             if(var1 == var2):
                 _, var = self._getvar(memory, 0)
@@ -703,7 +705,7 @@ class Instruction(object):
         if(type1 != type2):
             if(type1 != 'nil') and (type2 != 'nil'):
                 exit_error(
-                    f'"{self.opcode}" argument 1 and 2 are not same types "{type1}" != "{type2}"', 32)
+                    f'"{self.opcode}" argument 1 and 2 are not same types "{type1}" != "{type2}"', 53)
         else:
             if(var1 == var2):
                 return
@@ -720,11 +722,14 @@ class Instruction(object):
         type1, var1 = self._getvar(memory, 0)
 
         if(type1 != 'int'):
-            exit_error(f'"{self.opcode}" argument 1 is not type of int', 32)
+            exit_error(f'"{self.opcode}" argument 1 is not type of int', 53)
 
         rc = int(var1)
         if((0 <= rc) and (rc <= 49)):
             exit(rc)
+        else:
+            exit_error(
+                f'"{self.opcode}" argument 1 is out of range <0,49>', 57)
     ###############################################################################
 
     ###############################################################################

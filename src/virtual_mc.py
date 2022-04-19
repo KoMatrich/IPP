@@ -15,7 +15,7 @@ class Stack(Generic[T]):
         if not self.isempty():
             return self._stack.pop()
         else:
-            exit_error('Stack is empty', 55)
+            exit_error('Stack is empty', 56)
 
     def top(self) -> T:
         if(self.isempty()):
@@ -40,8 +40,11 @@ class Memory:
 
         def __str__(self):
             if(self._value is None):
-                return f'"{self._name}" is not defined'
+                return f'"{self._name}" is not initialized'
             return f'{self._type} "{self._name}"="{self._value}"'
+
+        def __eq__(self, __o: object) -> bool:
+            return self._name == __o
 
         def setvalue(self, type: 'str', value: 'str'):
             self._value = value
@@ -52,18 +55,16 @@ class Memory:
 
         def getvalue(self) -> 'str':
             if(self._value is None):
-                exit_error('Using variable that is not defined', 54)
+                exit_error('Using variable that is not defined', 56)
             return self._value
 
         def gettype(self) -> 'str':
             if(self._type is None):
-                exit_error('Using variable that is not defined', 54)
+                exit_error('Using variable that is not defined', 56)
             return self._type
 
-        def isdefined(self) -> 'bool':
-            if(self._type is None):
-                return False
-            return True
+        def isinicalized(self) -> 'bool':
+            return self._type is not None
 
     class Frame:
         def __init__(self):
@@ -89,8 +90,15 @@ class Memory:
         def isdefined(self, name: str) -> 'bool':
             for var in self._variables:
                 if(name == var.getname()):
-                    return var.isdefined()
+                    return True
             return False
+
+        def isinicialized(self, name: str) -> bool:
+            for var in self._variables:
+                if(name == var.getname()):
+                    return var.isinicalized()
+
+            exit_error(f'Variable "{name}" is not defined (F)', 54)
 
     class Label:
         def __init__(self, name: str, pos: int):
@@ -219,6 +227,18 @@ class Memory:
             return self._tf.isdefined(name)
         elif(frame == 'LF'):
             return self._lf.top().isdefined(name)
+        else:
+            exit_error(f'Invalid frame "{frame}"', 55)
+
+    def isinicialized(self, frame: 'str', name: 'str') -> 'bool':
+        if(frame == 'GF'):
+            return self._gf.isinicialized(name)
+        elif(frame == 'TF'):
+            if(self._tf is None):
+                exit_error(f'Frame "TF" is not defined', 55)
+            return self._tf.isinicialized(name)
+        elif(frame == 'LF'):
+            return self._lf.top().isinicialized(name)
         else:
             exit_error(f'Invalid frame "{frame}"', 55)
 
